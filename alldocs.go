@@ -11,7 +11,7 @@ The commands are:
 
         fetch       fetch a remote dependency
         update      update a local dependency
-        list        list dependencies, one per line
+        list        list dependencies one per line
         delete      delete a local dependency
 
 Use "gvt help [command]" for more information about a command.
@@ -63,7 +63,7 @@ Flags:
 	-precaire
 		allow the use of insecure protocols.
 
-List dependencies, one per line
+List dependencies one per line
 
 Usage:
         gvt list [-f format]

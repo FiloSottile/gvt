@@ -21,7 +21,7 @@ func addListFlags(fs *flag.FlagSet) {
 var cmdList = &Command{
 	Name:      "list",
 	UsageLine: "list [-f format]",
-	Short:     "list dependencies, one per line",
+	Short:     "list dependencies one per line",
 	Long: `list formats the contents of the manifest file.
 
 Flags:
