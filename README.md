@@ -51,7 +51,7 @@ Hello, world!
 $ gvt update github.com/fatih/color
 ```
 
-[Full usage on godoc.](https://godoc.org/github.com/FiloSottile/gvt)
+Full usage on [GoDoc ![GoDoc](https://godoc.org/github.com/FiloSottile/gvt?status.svg)](http://godoc.org/github.com/FiloSottile/gvt)
 
 ## Why
 
@@ -61,4 +61,4 @@ There are many Go vendoring tools, but they all have some subset of the followin
    * requirement to run on clients: some require the user to install the tool and run it after cloning, which breaks `go get`
    * **no real fetching support**: tools like Godep just copy packages from your GOPATH, instead of pulling it from the Internet
    * prominent metadata files: there's no need for the manifest to be in your repository root, or in its own empty folder
-   * entire different build stack: gb-vendor is awesome but it requires you to build your project with gb
+   * different build stack: gb-vendor is awesome but it requires you to build your project with gb
