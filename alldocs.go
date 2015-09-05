@@ -2,7 +2,7 @@
 //go:generate gvt help documentation
 
 /*
-gvt, a tool to manage your vendored dependencies.
+gvt, a simple go vendoring tool based on gb-vendor.
 
 Usage:
         gvt command [arguments]
@@ -11,13 +11,13 @@ The commands are:
 
         fetch       fetch a remote dependency
         update      update a local dependency
-        list        lists dependencies, one per line
+        list        list dependencies, one per line
         delete      delete a local dependency
 
 Use "gvt help [command]" for more information about a command.
 
 
-## Fetch a remote dependency
+Fetch a remote dependency
 
 Usage:
         gvt fetch [-branch branch | -revision rev | -tag tag] [-precaire] [-no-recurse] importpath
@@ -42,7 +42,7 @@ Flags:
 	-precaire
 		allow the use of insecure protocols.
 
-## Update a local dependency
+Update a local dependency
 
 Usage:
         gvt update [-all] import
@@ -63,21 +63,19 @@ Flags:
 	-precaire
 		allow the use of insecure protocols.
 
-## Lists dependencies, one per line
+List dependencies, one per line
 
 Usage:
         gvt list [-f format]
 
 list formats the contents of the manifest file.
 
-The output
-
 Flags:
 	-f
 		controls the template used for printing each manifest entry. If not supplied
 		the default value is "{{.Importpath}}\t{{.Repository}}{{.Path}}\t{{.Branch}}\t{{.Revision}}"
 
-## Delete a local dependency
+Delete a local dependency
 
 Usage:
         gvt delete [-all] importpath
