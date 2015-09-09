@@ -72,7 +72,11 @@ Flags:
 			}
 			path := args[0]
 			recurse = !noRecurse
-			return fetch(path, recurse)
+			m, err := vendor.ReadManifest(manifestFile())
+			if err != nil {
+				return fmt.Errorf("could not load manifest: %v", err)
+			}
+			return fetch(m, path, recurse)
 		default:
 			return fmt.Errorf("more than one import path supplied")
 		}
@@ -90,9 +94,8 @@ func rebuild_vendor() error {
 		tag = ""
 		for _, p := range paths {
 			m.RemoveDependency(p)
-			vendor.WriteManifest(manifestFile(), m)
 			revision = p.Revision
-			err = fetch(p.Importpath, false)
+			err = fetch(m, p.Importpath, false)
 			if err != nil {
 				return err
 			}
@@ -102,11 +105,7 @@ func rebuild_vendor() error {
 	return err
 }
 
-func fetch(path string, recurse bool) error {
-	m, err := vendor.ReadManifest(manifestFile())
-	if err != nil {
-		return fmt.Errorf("could not load manifest: %v", err)
-	}
+func fetch(m *vendor.Manifest, path string, recurse bool) error {
 
 	repo, extra, err := vendor.DeduceRemoteRepo(path, insecure)
 	if err != nil {
@@ -212,7 +211,7 @@ func fetch(path string, recurse bool) error {
 			sort.Strings(vkeys)
 			pkg := vkeys[0]
 			log.Printf("fetching recursive dependency %s", pkg)
-			if err := fetch(pkg, false); err != nil {
+			if err := fetch(m, pkg, false); err != nil {
 				return err
 			}
 		}
