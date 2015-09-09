@@ -12,7 +12,6 @@ var (
 
 func addFreezeFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&freezeAll, "all", false, "freeze all dependencies")
-	fs.BoolVar(&insecure, "precaire", false, "allow the use of insecure protocols")
 }
 
 var cmdFreeze = &Command{
