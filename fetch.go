@@ -72,7 +72,7 @@ Flags:
 			}
 			path := args[0]
 			recurse = !noRecurse
-			return fetch(path, recurse, true)
+			return fetch(path, recurse)
 		default:
 			return fmt.Errorf("more than one import path supplied")
 		}
@@ -92,7 +92,7 @@ func rebuild_vendor() error {
 			m.RemoveDependency(p)
 			vendor.WriteManifest(manifestFile(), m)
 			revision = p.Revision
-			err = fetch(p.Importpath, false, false)
+			err = fetch(p.Importpath, false)
 			if err != nil {
 				return err
 			}
@@ -102,7 +102,7 @@ func rebuild_vendor() error {
 	return err
 }
 
-func fetch(path string, recurse bool, exists_check bool) error {
+func fetch(path string, recurse bool) error {
 	m, err := vendor.ReadManifest(manifestFile())
 	if err != nil {
 		return fmt.Errorf("could not load manifest: %v", err)
@@ -117,7 +117,7 @@ func fetch(path string, recurse bool, exists_check bool) error {
 	// encoded in the repo.
 	path = stripscheme(path)
 
-	if exists_check && m.HasImportpath(path) {
+	if m.HasImportpath(path) {
 		return fmt.Errorf("%s is already vendored", path)
 	}
 
@@ -212,7 +212,7 @@ func fetch(path string, recurse bool, exists_check bool) error {
 			sort.Strings(vkeys)
 			pkg := vkeys[0]
 			log.Printf("fetching recursive dependency %s", pkg)
-			if err := fetch(pkg, false, exists_check); err != nil {
+			if err := fetch(pkg, false); err != nil {
 				return err
 			}
 		}
