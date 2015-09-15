@@ -22,6 +22,7 @@ var (
 	insecure  bool // Allow the use of insecure protocols
 
 	recurse bool // should we fetch recursively
+	rebuild bool
 )
 
 func addFetchFlags(fs *flag.FlagSet) {
@@ -30,11 +31,12 @@ func addFetchFlags(fs *flag.FlagSet) {
 	fs.StringVar(&tag, "tag", "", "tag of the package")
 	fs.BoolVar(&noRecurse, "no-recurse", false, "do not fetch recursively")
 	fs.BoolVar(&insecure, "precaire", false, "allow the use of insecure protocols")
+	fs.BoolVar(&rebuild, "rebuild", false, "rebuild the environment using the revisions in the manifest file")
 }
 
 var cmdFetch = &Command{
 	Name:      "fetch",
-	UsageLine: "fetch [-branch branch | -revision rev | -tag tag] [-precaire] [-no-recurse] importpath",
+	UsageLine: "fetch [-branch branch | -revision rev | -tag tag] [-precaire] [-no-recurse] importpath | -rebuild",
 	Short:     "fetch a remote dependency",
 	Long: `fetch vendors an upstream import path.
 
@@ -60,11 +62,21 @@ Flags:
 	Run: func(args []string) error {
 		switch len(args) {
 		case 0:
+			if rebuild {
+				return rebuild_vendor()
+			}
 			return fmt.Errorf("fetch: import path missing")
 		case 1:
+			if rebuild {
+				return fmt.Errorf("fetch: rebuild cannot be used at the same time as path")
+			}
 			path := args[0]
 			recurse = !noRecurse
-			return fetch(path, recurse)
+			m, err := vendor.ReadManifest(manifestFile())
+			if err != nil {
+				return fmt.Errorf("could not load manifest: %v", err)
+			}
+			return fetch(m, path, recurse)
 		default:
 			return fmt.Errorf("more than one import path supplied")
 		}
@@ -72,11 +84,28 @@ Flags:
 	AddFlags: addFetchFlags,
 }
 
-func fetch(path string, recurse bool) error {
+func rebuild_vendor() error {
 	m, err := vendor.ReadManifest(manifestFile())
-	if err != nil {
-		return fmt.Errorf("could not load manifest: %v", err)
+	if err == nil {
+		var paths []vendor.Dependency
+		paths = make([]vendor.Dependency, len(m.Dependencies))
+		copy(paths, m.Dependencies)
+		branch = ""
+		tag = ""
+		for _, p := range paths {
+			m.RemoveDependency(p)
+			revision = p.Revision
+			err = fetch(m, p.Importpath, false)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
 	}
+	return err
+}
+
+func fetch(m *vendor.Manifest, path string, recurse bool) error {
 
 	repo, extra, err := vendor.DeduceRemoteRepo(path, insecure)
 	if err != nil {
@@ -178,11 +207,11 @@ func fetch(path string, recurse bool) error {
 
 			// sort keys in ascending order, so the shortest missing import path
 			// with be fetched first.
-			keys := keys(missing)
-			sort.Strings(keys)
-			pkg := keys[0]
+			vkeys := keys(missing)
+			sort.Strings(vkeys)
+			pkg := vkeys[0]
 			log.Printf("fetching recursive dependency %s", pkg)
-			if err := fetch(pkg, false); err != nil {
+			if err := fetch(m, pkg, false); err != nil {
 				return err
 			}
 		}

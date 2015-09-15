@@ -30,6 +30,7 @@ var commands = []*Command{
 	cmdUpdate,
 	cmdList,
 	cmdDelete,
+	cmdFreeze,
 }
 
 func main() {
