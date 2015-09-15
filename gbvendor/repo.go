@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
-
-	"github.com/constabulary/gb"
 )
 
 // RemoteRepo describes a remote dvcs repository.
@@ -248,7 +247,7 @@ func probe(vcs func(*url.URL) error, url *url.URL, insecure bool, schemes ...str
 			}
 		case "http", "git":
 			if !insecure {
-				gb.Infof("skipping insecure protocol: %s", url.String())
+				log.Printf("skipping insecure protocol: %s", url.String())
 				continue
 			}
 			if err := vcs(&url); err == nil {
@@ -279,7 +278,7 @@ func (g *gitrepo) URL() string {
 // error will be returned.
 func (g *gitrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 	if branch == "HEAD" {
-		return nil, fmt.Errorf("cannot update %q as it has been previously fetched with -tag or -revision. Please use gb vendor delete then fetch again.", g.url)
+		return nil, fmt.Errorf("cannot update %q as it has been previously fetched with -tag or -revision. Please use gvt delete then fetch again.", g.url)
 	}
 	if !atMostOne(branch, tag, revision) {
 		return nil, fmt.Errorf("only one of branch, tag or revision may be supplied")
@@ -490,7 +489,7 @@ func mkdir(path string) error {
 }
 
 func mktmp() (string, error) {
-	return ioutil.TempDir("", "gb-vendor-")
+	return ioutil.TempDir("", "gvt-")
 }
 
 func run(c string, args ...string) ([]byte, error) {

@@ -49,13 +49,12 @@ func help(args []string) {
 	for _, cmd := range commands {
 		if cmd.Name == arg {
 			tmpl(os.Stdout, helpTemplate, cmd)
-			// not exit 2: succeeded at 'gb help cmd'.
 			return
 		}
 	}
 
-	fmt.Fprintf(os.Stderr, "Unknown help topic %#q. Run 'gb help'.\n", arg)
-	os.Exit(2) // failed at 'gb help cmd'
+	fmt.Fprintf(os.Stderr, "Unknown help topic %#q. Run 'gvt help'.\n", arg)
+	os.Exit(2)
 }
 
 var usageTemplate = `gvt, a simple go vendoring tool based on gb-vendor.
