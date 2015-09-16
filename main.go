@@ -27,6 +27,7 @@ type Command struct {
 
 var commands = []*Command{
 	cmdFetch,
+	cmdRebuild,
 	cmdUpdate,
 	cmdList,
 	cmdDelete,
