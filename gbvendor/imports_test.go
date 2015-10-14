@@ -2,7 +2,6 @@ package vendor
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -28,11 +27,12 @@ func TestFetchMetadata(t *testing.T) {
 	if testing.Short() {
 		t.Skipf("skipping network tests in -short mode")
 	}
-	tests := []struct {
+	type testParams struct {
 		path     string
 		want     string
 		insecure bool
-	}{{
+	}
+	tests := []testParams{{
 		path: "golang.org/x/tools/cmd/godoc",
 		want: `<!DOCTYPE html>
 <html>
@@ -80,6 +80,32 @@ go get gopkg.in/check.v1
 			t.Errorf("FetchMetadata(%q): want %q, got %q", tt.path, tt.want, got)
 		}
 	}
+
+	// Test for error catch.
+	errTests := []testParams{{
+		path:     "any.inaccessible.server/the.project",
+		want:     `unable to determine remote metadata protocol: failed to access url "http://any.inaccessible.server/the.project?go-get=1"`,
+		insecure: true,
+	}, {
+		path:     "any.inaccessible.server/the.project",
+		want:     `unable to determine remote metadata protocol: failed to access url "https://any.inaccessible.server/the.project?go-get=1"`,
+		insecure: false,
+	}}
+
+	for _, ett := range errTests {
+		r, err := FetchMetadata(ett.path, ett.insecure)
+		if err == nil {
+			t.Errorf("Access to url %q without any error, but the error should be happen.", ett.path)
+			if r != nil {
+				r.Close()
+			}
+			continue
+		}
+		got := err.Error()
+		if got != ett.want {
+			t.Errorf("FetchMetadata(%q): want %q, got %q", ett.path, ett.want, got)
+		}
+	}
 }
 
 func TestParseMetadata(t *testing.T) {
@@ -108,9 +134,10 @@ func TestParseMetadata(t *testing.T) {
 		importpath: "gopkg.in/mgo.v2",
 		vcs:        "git",
 		reporoot:   "https://gopkg.in/mgo.v2",
-	}, {
-		path: "speter.net/go/exp",
-		err:  fmt.Errorf("go-import metadata not found"),
+		//	disabled: certificate has expired
+		//	}, {
+		//		path: "speter.net/go/exp",
+		//		err:  fmt.Errorf("go-import metadata not found"),
 	}}
 
 	for _, tt := range tests {
