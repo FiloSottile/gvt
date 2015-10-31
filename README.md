@@ -8,7 +8,8 @@ You run `gvt fetch` when you would run `go get`. `gvt` downloads packages to `./
 
 `gvt` works recursively as you would expect, and lets you update vendored dependencies. It also writes a manifest to `./vendor/manifest`. Finally, it strips the VCS metadata so that you can commit the vendored source cleanly.
 
-Packages whose dependencies are vendored with `gvt` are `go build`-able and `go get`-able by Go 1.5 with `GO15VENDOREXPERIMENT=1` set.
+Packages whose dependencies are vendored with `gvt` are `go build`-able and `go get`-able by Go 1.5 with `GO15VENDOREXPERIMENT=1` set. Note that projects must live within the GOPATH tree in order to be go buildable with the GO15VENDOREXPERIMENT flag.
+
 
 ## Installation
 
@@ -30,9 +31,9 @@ $ tree -d
 └── vendor
     └── github.com
         ├── fatih
-        │   └── color
+        │   └── color
         ├── mattn
-        │   └── go-isatty
+        │   └── go-isatty
         └── shiena
             └── ansicolor
                 └── ansicolor
