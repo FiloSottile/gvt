@@ -11,11 +11,13 @@ import (
 )
 
 var (
-	rbInsecure bool // Allow the use of insecure protocols
+	rbInsecure    bool // Allow the use of insecure protocols
+	rbConnections uint // Count of concurrent download connections
 )
 
 func addRebuildFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&rbInsecure, "precaire", false, "allow the use of insecure protocols")
+	fs.UintVar(&rbConnections, "connections", 8, "count of parallel download connections")
 }
 
 var cmdRebuild = &Command{
@@ -36,6 +38,8 @@ the availability of the dependencies repositories and breaks "go get".
 Flags:
 	-precaire
 		allow the use of insecure protocols.
+	-connections
+		count of parallel download connections.
 `,
 	Run: func(args []string) error {
 		switch len(args) {
@@ -54,35 +58,55 @@ func rebuild() error {
 		return fmt.Errorf("could not load manifest: %v", err)
 	}
 
+	var semaphore = make(chan int, rbConnections)
+	var errorsChan = make(chan error, rbConnections)
+
 	for _, dep := range m.Dependencies {
-		dst := filepath.Join(vendorDir(), dep.Importpath)
-		if _, err := os.Stat(dst); err == nil {
-			if err := vendor.RemoveAll(dst); err != nil {
-				// TODO need to apply vendor.cleanpath here too
-				return fmt.Errorf("dependency could not be deleted: %v", err)
-			}
-		}
+		go func(d vendor.Dependency) {
+			semaphore <- 1
+			errorsChan <- downloadDependency(d)
+			<-semaphore
+		}(dep)
+	}
 
-		log.Printf("fetching %s", dep.Importpath)
-
-		repo, _, err := vendor.DeduceRemoteRepo(dep.Importpath, rbInsecure)
+	for _ = range m.Dependencies {
+		err = <-errorsChan
 		if err != nil {
 			return err
 		}
+	}
 
-		wc, err := repo.Checkout("", "", dep.Revision)
-		if err != nil {
-			return err
-		}
+	return nil
+}
 
-		src := filepath.Join(wc.Dir(), dep.Path)
-		if err := vendor.Copypath(dst, src); err != nil {
-			return err
+func downloadDependency(dep vendor.Dependency) error {
+	dst := filepath.Join(vendorDir(), dep.Importpath)
+	if _, err := os.Stat(dst); err == nil {
+		if err := vendor.RemoveAll(dst); err != nil {
+			// TODO need to apply vendor.cleanpath here too
+			return fmt.Errorf("dependency could not be deleted: %v", err)
 		}
+	}
 
-		if err := wc.Destroy(); err != nil {
-			return err
-		}
+	log.Printf("fetching %s", dep.Importpath)
+
+	repo, _, err := vendor.DeduceRemoteRepo(dep.Importpath, rbInsecure)
+	if err != nil {
+		return err
+	}
+
+	wc, err := repo.Checkout("", "", dep.Revision)
+	if err != nil {
+		return err
+	}
+
+	src := filepath.Join(wc.Dir(), dep.Path)
+	if err := vendor.Copypath(dst, src); err != nil {
+		return err
+	}
+
+	if err := wc.Destroy(); err != nil {
+		return err
 	}
 
 	return nil
