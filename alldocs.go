@@ -87,7 +87,7 @@ Flags:
 List dependencies one per line
 
 Usage:
-        gvt list [-f format]
+        gvt list [-f format] [-orphan]
 
 list formats the contents of the manifest file.
 
@@ -95,6 +95,8 @@ Flags:
 	-f
 		controls the template used for printing each manifest entry. If not supplied
 		the default value is "{{.Importpath}}\t{{.Repository}}{{.Path}}\t{{.Branch}}\t{{.Revision}}"
+	-orphan
+		filters the list for dependencies that currently are not being referenced.
 
 Delete a local dependency
 
