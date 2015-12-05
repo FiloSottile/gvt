@@ -73,6 +73,24 @@ Please consider that this approach has the following consequences:
   * the dependencies will need to remain available from the source repositories: if the original repository goes down or rewrites history, build reproducibility is lost
   * `go get` won't work on your package
 
+## Troubleshooting
+
+### `error: tag 'fetch' not found.`
+
+This kind of errors happens because you have an alias for `gvt` pointing to `git verify-tag`.
+
+Run this, or add it to your `~/.bashrc` / `~/.zshrc`:
+
+```
+unalias gvt
+```
+
+### `go build` can't find the vendored package
+
+Make sure you set `GO15VENDOREXPERIMENT=1`.
+
+Also note that GO15VENDOREXPERIMENT does not apply when outside the GOPATH tree. That is, your project must be somewhere in a subfolder of `$GOPATH`.
+
 ## Why
 
 There are many Go vendoring tools, but they all have some subset of the following problems
