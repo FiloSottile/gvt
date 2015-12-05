@@ -1,0 +1,15 @@
+language: go
+go_import_path: github.com/FiloSottile/gvt
+go:
+  - 1.5.2
+  - 1.4.3
+  - tip
+
+sudo: false
+
+addons:
+  ssh_known_hosts:
+      - bitbucket.org
+
+script:
+  - go test -v ./...
