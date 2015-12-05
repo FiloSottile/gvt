@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sync"
+	"sync/atomic"
 
 	"github.com/FiloSottile/gvt/gbvendor"
 )
@@ -58,22 +60,30 @@ func rebuild() error {
 		return fmt.Errorf("could not load manifest: %v", err)
 	}
 
-	var semaphore = make(chan int, rbConnections)
-	var errorsChan = make(chan error, rbConnections)
-
-	for _, dep := range m.Dependencies {
-		go func(d vendor.Dependency) {
-			semaphore <- 1
-			errorsChan <- downloadDependency(d)
-			<-semaphore
-		}(dep)
+	var errors uint32
+	var wg sync.WaitGroup
+	depC := make(chan vendor.Dependency)
+	for i := 0; i < int(rbConnections); i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for d := range depC {
+				if err := downloadDependency(d); err != nil {
+					log.Printf("%s: %v", d.Importpath, err)
+					atomic.AddUint32(&errors, 1)
+				}
+			}
+		}()
 	}
 
-	for _ = range m.Dependencies {
-		err = <-errorsChan
-		if err != nil {
-			return err
-		}
+	for _, dep := range m.Dependencies {
+		depC <- dep
+	}
+	close(depC)
+	wg.Wait()
+
+	if errors > 0 {
+		return fmt.Errorf("failed to fetch %d dependencies", errors)
 	}
 
 	return nil

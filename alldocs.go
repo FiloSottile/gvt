@@ -62,6 +62,8 @@ the availability of the dependencies repositories and breaks "go get".
 Flags:
 	-precaire
 		allow the use of insecure protocols.
+	-connections
+		count of parallel download connections.
 
 Update a local dependency
 
