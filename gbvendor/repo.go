@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/constabulary/gb/fileutils"
 )
 
 // RemoteRepo describes a remote dvcs repository.
@@ -323,7 +325,7 @@ type workingcopy struct {
 func (w workingcopy) Dir() string { return w.path }
 
 func (w workingcopy) Destroy() error {
-	if err := RemoveAll(w.path); err != nil {
+	if err := fileutils.RemoveAll(w.path); err != nil {
 		return err
 	}
 	parent := filepath.Dir(w.path)
@@ -380,18 +382,19 @@ func (h *hgrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 		"clone",
 		h.url,
 		dir,
+		"--noninteractive",
 	}
 
 	if branch != "" {
 		args = append(args, "--branch", branch)
 	}
 	if err := runOut(os.Stderr, "hg", args...); err != nil {
-		RemoveAll(dir)
+		fileutils.RemoveAll(dir)
 		return nil, err
 	}
 	if revision != "" {
 		if err := runOut(os.Stderr, "hg", "--cwd", dir, "update", "-r", revision); err != nil {
-			RemoveAll(dir)
+			fileutils.RemoveAll(dir)
 			return nil, err
 		}
 	}
@@ -449,7 +452,7 @@ func (b *bzrrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 	}
 	wc := filepath.Join(dir, "wc")
 	if err := runOut(os.Stderr, "bzr", "branch", b.url, wc); err != nil {
-		RemoveAll(dir)
+		fileutils.RemoveAll(dir)
 		return nil, err
 	}
 
@@ -478,7 +481,7 @@ func cleanPath(path string) error {
 		return nil
 	}
 	parent := filepath.Dir(path)
-	if err := RemoveAll(path); err != nil {
+	if err := fileutils.RemoveAll(path); err != nil {
 		return err
 	}
 	return cleanPath(parent)
@@ -500,6 +503,7 @@ func run(c string, args ...string) ([]byte, error) {
 
 func runOut(w io.Writer, c string, args ...string) error {
 	cmd := exec.Command(c, args...)
+	cmd.Stdin = nil
 	cmd.Stdout = w
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
@@ -514,6 +518,7 @@ func runPath(path string, c string, args ...string) ([]byte, error) {
 func runOutPath(w io.Writer, path string, c string, args ...string) error {
 	cmd := exec.Command(c, args...)
 	cmd.Dir = path
+	cmd.Stdin = nil
 	cmd.Stdout = w
 	cmd.Stderr = os.Stderr
 	return cmd.Run()

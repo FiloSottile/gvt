@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/constabulary/gb/fileutils"
+
 	"github.com/FiloSottile/gvt/gbvendor"
 )
 
@@ -97,7 +99,7 @@ Flags:
 				Path:       extra,
 			}
 
-			if err := vendor.RemoveAll(filepath.Join(vendorDir(), filepath.FromSlash(d.Importpath))); err != nil {
+			if err := fileutils.RemoveAll(filepath.Join(vendorDir(), filepath.FromSlash(d.Importpath))); err != nil {
 				// TODO(dfc) need to apply vendor.cleanpath here to remove intermediate directories.
 				return fmt.Errorf("dependency could not be deleted: %v", err)
 			}

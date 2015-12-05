@@ -9,6 +9,8 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/constabulary/gb/fileutils"
+
 	"github.com/FiloSottile/gvt/gbvendor"
 )
 
@@ -92,7 +94,7 @@ func rebuild() error {
 func downloadDependency(dep vendor.Dependency) error {
 	dst := filepath.Join(vendorDir(), dep.Importpath)
 	if _, err := os.Stat(dst); err == nil {
-		if err := vendor.RemoveAll(dst); err != nil {
+		if err := fileutils.RemoveAll(dst); err != nil {
 			// TODO need to apply vendor.cleanpath here too
 			return fmt.Errorf("dependency could not be deleted: %v", err)
 		}

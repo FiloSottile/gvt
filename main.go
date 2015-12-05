@@ -10,10 +10,7 @@ import (
 var fs = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
 func init() {
-	fs.Usage = func() {
-		printUsage(os.Stderr)
-		os.Exit(2)
-	}
+	fs.Usage = usage
 }
 
 type Command struct {
@@ -38,8 +35,8 @@ func main() {
 
 	switch {
 	case len(args) < 1, args[0] == "-h", args[0] == "-help":
-		fs.Usage()
-		os.Exit(1)
+		printUsage(os.Stdout)
+		os.Exit(0)
 	case args[0] == "help":
 		help(args[1:])
 		return
