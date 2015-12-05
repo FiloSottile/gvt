@@ -14,7 +14,7 @@ Packages whose dependencies are vendored with `gvt` are `go build`-able and `go 
 ## Installation
 
 ```
-go get -u github.com/FiloSottile/gvt
+GO15VENDOREXPERIMENT=1 go get -u github.com/FiloSottile/gvt
 ```
 
 ## Usage
@@ -79,7 +79,7 @@ There are many Go vendoring tools, but they all have some subset of the followin
 
    * no GO15VENDOREXPERIMENT support: old tools are based on import path rewriting or GOPATH overrides
    * requirement to run on clients: some require the user to install the tool and run it after cloning, which breaks `go get`
-   * **no real fetching support**: tools like Godep just copy packages from your GOPATH, instead of pulling it from the Internet
+   * **no real fetching support**: tools like Godep just copy packages from your GOPATH, instead of pulling it from the Internet, contaminating your system environment
    * prominent metadata files: there's no need for the manifest to be in your repository root, or in its own empty folder, or to be manually edited
    * complex feature set: many are project management tools with included vendoring features
    * different build stack: gb-vendor is awesome but it requires you to build your project with gb
