@@ -3,15 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
+	"go/build"
 	"log"
 	"net/url"
 	"path/filepath"
 	"runtime"
 	"sort"
 
-	"go/build"
-
 	"github.com/FiloSottile/gvt/gbvendor"
+	"github.com/constabulary/gb/fileutils"
 )
 
 var (
@@ -122,7 +122,7 @@ func fetch(path string, recurse bool) error {
 	dst := filepath.Join(vendorDir(), dep.Importpath)
 	src := filepath.Join(wc.Dir(), dep.Path)
 
-	if err := vendor.Copypath(dst, src); err != nil {
+	if err := fileutils.Copypath(dst, src); err != nil {
 		return err
 	}
 

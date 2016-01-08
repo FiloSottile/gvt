@@ -9,9 +9,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/constabulary/gb/fileutils"
-
 	"github.com/FiloSottile/gvt/gbvendor"
+	"github.com/constabulary/gb/fileutils"
 )
 
 var (
@@ -113,7 +112,7 @@ func downloadDependency(dep vendor.Dependency) error {
 	}
 
 	src := filepath.Join(wc.Dir(), dep.Path)
-	if err := vendor.Copypath(dst, src); err != nil {
+	if err := fileutils.Copypath(dst, src); err != nil {
 		return err
 	}
 
