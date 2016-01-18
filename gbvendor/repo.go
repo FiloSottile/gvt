@@ -477,7 +477,7 @@ func (b *BzrClone) Branch() (string, error) {
 }
 
 func cleanPath(path string) error {
-	if files, _ := ioutil.ReadDir(path); len(files) > 0 || filepath.Base(path) == "src" {
+	if files, _ := ioutil.ReadDir(path); len(files) > 0 || filepath.Base(path) == "vendor" {
 		return nil
 	}
 	parent := filepath.Dir(path)

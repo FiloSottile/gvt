@@ -10,7 +10,7 @@ Usage:
 The commands are:
 
         fetch       fetch a remote dependency
-        rebuild     rebuild dependencies from manifest
+        restore     restore dependencies from manifest
         update      update a local dependency
         list        list dependencies one per line
         delete      delete a local dependency
@@ -43,12 +43,12 @@ Flags:
 	-precaire
 		allow the use of insecure protocols.
 
-Rebuild dependencies from manifest
+Restore dependencies from manifest
 
 Usage:
-        gvt rebuild
+        gvt restore
 
-rebuild fetches the dependencies listed in the manifest.
+restore fetches the dependencies listed in the manifest.
 
 It's meant for workflows that don't include checking in to VCS the vendored
 source, for example if .gitignore includes lines like
@@ -56,7 +56,7 @@ source, for example if .gitignore includes lines like
     vendor/**
     !vendor/manifest
 
-Note that such a setup requires "gvt rebuild" to build the source, relies on
+Note that such a setup requires "gvt restore" to build the source, relies on
 the availability of the dependencies repositories and breaks "go get".
 
 Flags:

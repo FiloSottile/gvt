@@ -65,7 +65,7 @@ Some developers prefer not to check in the source of the vendored dependencies. 
     vendor/**
     !vendor/manifest
 
-When you check out the source again, you can then run `gvt rebuild` to fetch all the dependencies at the revisions specified in the `vendor/manifest` file.
+When you check out the source again, you can then run `gvt restore` to fetch all the dependencies at the revisions specified in the `vendor/manifest` file.
 
 Please consider that this approach has the following consequences:
 

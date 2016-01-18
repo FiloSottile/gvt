@@ -24,7 +24,7 @@ type Command struct {
 
 var commands = []*Command{
 	cmdFetch,
-	cmdRebuild,
+	cmdRestore,
 	cmdUpdate,
 	cmdList,
 	cmdDelete,
@@ -40,6 +40,9 @@ func main() {
 	case args[0] == "help":
 		help(args[1:])
 		return
+	case args[0] == "rebuild":
+		// rebuild was renamed restore, alias for backwards compatibility
+		args[0] = "restore"
 	}
 
 	for _, command := range commands {
