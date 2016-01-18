@@ -1,8 +1,8 @@
 # gvt, the go vendoring tool
 
-`gvt` is a simple Go vendoring tool made for the GO15VENDOREXPERIMENT.  
+`gvt` is a simple Go vendoring tool made for the GO15VENDOREXPERIMENT based on [gb-vendor](https://github.com/constabulary/gb).
 
-It's based entirely on [gb-vendor](https://github.com/constabulary/gb).
+It lets you easily and "idiomatically" include external dependencies in your repository to get reproducible builds.
 
 You run `gvt fetch` when you would run `go get`. `gvt` downloads packages to `./vendor/...`. With `GO15VENDOREXPERIMENT=1` the compiler will find and use those dependencies without import path rewriting.
 
@@ -97,7 +97,7 @@ There are many Go vendoring tools, but they all have some subset of the followin
 
    * no GO15VENDOREXPERIMENT support: old tools are based on import path rewriting or GOPATH overrides
    * requirement to run on clients: some require the user to install the tool and run it after cloning, which breaks `go get`
-   * **no real fetching support**: tools like Godep just copy packages from your GOPATH, instead of pulling it from the Internet, contaminating your system environment
+   * **no real fetching support**: tools like Godep just copy packages from your GOPATH, instead of pulling it from the Internet, contaminating your system environment; gvt will never touch your system GOPATH
    * prominent metadata files: there's no need for the manifest to be in your repository root, or in its own empty folder, or to be manually edited
    * complex feature set: many are project management tools with included vendoring features
    * different build stack: gb-vendor is awesome but it requires you to build your project with gb
