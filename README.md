@@ -1,14 +1,19 @@
 # gvt, the go vendoring tool
 
-`gvt` is a simple Go vendoring tool made for the GO15VENDOREXPERIMENT based on [gb-vendor](https://github.com/constabulary/gb).
+`gvt` is a simple Go vendoring tool made for the GO15VENDOREXPERIMENT, based on [gb-vendor](https://github.com/constabulary/gb).
 
 It lets you easily and "idiomatically" include external dependencies in your repository to get reproducible builds.
 
-You run `gvt fetch` when you would run `go get`. `gvt` downloads packages to `./vendor/...`. With `GO15VENDOREXPERIMENT=1` the compiler will find and use those dependencies without import path rewriting.
+  * No need to change how you build your project!  
+    You run `gvt fetch` when you would run `go get`. `gvt` downloads packages to `./vendor/...`. With `GO15VENDOREXPERIMENT=1` the stock Go compiler will find and use those dependencies (without import path or GOPATH changes).
 
-`gvt` works recursively as you would expect, and lets you update vendored dependencies. It also writes a manifest to `./vendor/manifest`. Finally, it strips the VCS metadata so that you can commit the vendored source cleanly.
+  * No need to manually chase, copy or cleanup dependencies!  
+    `gvt` works recursively as you would expect, and lets you update vendored dependencies. It also writes a manifest to `./vendor/manifest`. Finally, it strips the VCS metadata so that you can commit the vendored source cleanly.
 
-Packages whose dependencies are vendored with `gvt` are `go build`-able and `go get`-able by Go 1.5 with `GO15VENDOREXPERIMENT=1` set. Note that projects must live within the GOPATH tree in order to be go buildable with the GO15VENDOREXPERIMENT flag.
+  * No need for your users and occasional contributors to install or even know about gvt!  
+    Packages whose dependencies are vendored with `gvt` are `go build`-able and `go get`-able out of the box by Go 1.5 with `GO15VENDOREXPERIMENT=1` set.
+
+Note that projects must live within the GOPATH tree in order to be go buildable with the GO15VENDOREXPERIMENT flag.
 
 
 ## Installation
