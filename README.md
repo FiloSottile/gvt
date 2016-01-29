@@ -4,16 +4,21 @@
 
 It lets you easily and "idiomatically" include external dependencies in your repository to get reproducible builds.
 
+  * No need to learn a new tool or format!  
+    You already know how to use `gvt`: just run `gvt fetch` when and like you would run `go get`. You can imagine what `gvt update` and `gvt delete` do.
+
   * No need to change how you build your project!  
-    You run `gvt fetch` when you would run `go get`. `gvt` downloads packages to `./vendor/...`. With `GO15VENDOREXPERIMENT=1` the stock Go compiler will find and use those dependencies (without import path or GOPATH changes).
+    `gvt` downloads packages to `./vendor/...`. With `GO15VENDOREXPERIMENT=1` the stock Go compiler will find and use those dependencies automatically (without import path or GOPATH changes).
 
   * No need to manually chase, copy or cleanup dependencies!  
-    `gvt` works recursively as you would expect, and lets you update vendored dependencies. It also writes a manifest to `./vendor/manifest`. Finally, it strips the VCS metadata so that you can commit the vendored source cleanly.
+    `gvt` works recursively as you would expect, and lets you update vendored dependencies. It also writes a manifest to `./vendor/manifest` and never touches your system GOPATH. Finally, it strips the VCS metadata so that you can commit the vendored source cleanly.
 
-  * No need for your users and occasional contributors to install or even know about gvt!  
+  * No need for your users and occasional contributors to install **or even know about** gvt!  
     Packages whose dependencies are vendored with `gvt` are `go build`-able and `go get`-able out of the box by Go 1.5 with `GO15VENDOREXPERIMENT=1` set.
 
-Note that projects must live within the GOPATH tree in order to be go buildable with the GO15VENDOREXPERIMENT flag.
+*Note that projects must live within the GOPATH tree in order to be go buildable with the GO15VENDOREXPERIMENT flag.*
+
+If you use and like (or dislike!) `gvt`, it would definitely make my day better if you dropped a line at `gvt -at- filippo.io` :)
 
 
 ## Installation
@@ -95,14 +100,3 @@ unalias gvt
 Make sure you set `GO15VENDOREXPERIMENT=1`.
 
 Also note that GO15VENDOREXPERIMENT does not apply when outside the GOPATH tree. That is, your project must be somewhere in a subfolder of `$GOPATH`.
-
-## Why
-
-There are many Go vendoring tools, but they all have some subset of the following problems
-
-   * no GO15VENDOREXPERIMENT support: old tools are based on import path rewriting or GOPATH overrides
-   * requirement to run on clients: some require the user to install the tool and run it after cloning, which breaks `go get`
-   * **no real fetching support**: tools like Godep just copy packages from your GOPATH, instead of pulling it from the Internet, contaminating your system environment; gvt will never touch your system GOPATH
-   * prominent metadata files: there's no need for the manifest to be in your repository root, or in its own empty folder, or to be manually edited
-   * complex feature set: many are project management tools with included vendoring features
-   * different build stack: gb-vendor is awesome but it requires you to build your project with gb
