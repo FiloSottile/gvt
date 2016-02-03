@@ -34,7 +34,7 @@ func addFetchFlags(fs *flag.FlagSet) {
 
 var cmdFetch = &Command{
 	Name:      "fetch",
-	UsageLine: "fetch [-branch branch | -revision rev | -tag tag] [-precaire] [-no-recurse] importpath",
+	UsageLine: "fetch [-branch branch] [-revision rev | -tag tag] [-precaire] [-no-recurse] importpath",
 	Short:     "fetch a remote dependency",
 	Long: `fetch vendors an upstream import path.
 
@@ -43,16 +43,15 @@ from private repositories that cannot be probed.
 
 Flags:
 	-branch branch
-		fetch from the name branch. If not supplied the default upstream
-		branch will be used.
+		fetch from the named branch. Will also be used by gvt update.
+		If not supplied the default upstream branch will be used.
 	-no-recurse
 		do not fetch recursively.
 	-tag tag
-		fetch the specified tag. If not supplied the default upstream
-		branch will be used.
+		fetch the specified tag.
 	-revision rev
-		fetch the specific revision from the branch (if supplied). If no
-		revision supplied, the latest available will be supplied.
+		fetch the specific revision from the branch or repository.
+		If no revision supplied, the latest available will be fetched.
 	-precaire
 		allow the use of insecure protocols.
 

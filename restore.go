@@ -96,6 +96,8 @@ func downloadDependency(dep vendor.Dependency) error {
 	if err != nil {
 		return fmt.Errorf("dependency could not be processed: %s", err)
 	}
+	// We can't pass the branch here, and benefit from narrow clones, as the
+	// revision might not be in the branch tree anymore. Thanks rebase.
 	wc, err := repo.Checkout("", "", dep.Revision)
 	if err != nil {
 		return fmt.Errorf("dependency could not be fetched: %s", err)

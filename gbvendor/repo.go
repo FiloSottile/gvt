@@ -274,16 +274,18 @@ func (g *gitrepo) URL() string {
 	return g.url
 }
 
-// Checkout fetchs the remote branch, tag, or revision. If more than one is
-// supplied, an error is returned. If the branch is blank,
-// then the default remote branch will be used. If the branch is "HEAD", an
-// error will be returned.
+// Checkout fetchs the remote branch, tag, or revision. If the branch is blank,
+// then the default remote branch will be used. If the branch is "HEAD" and
+// revision is empty, an impossible update is assumed.
 func (g *gitrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
-	if branch == "HEAD" {
+	if branch == "HEAD" && revision == "" {
 		return nil, fmt.Errorf("cannot update %q as it has been previously fetched with -tag or -revision. Please use gvt delete then fetch again.", g.url)
 	}
-	if !atMostOne(branch, tag, revision) {
-		return nil, fmt.Errorf("only one of branch, tag or revision may be supplied")
+	if !atMostOne(tag, revision) {
+		return nil, fmt.Errorf("only one of tag or revision may be supplied")
+	}
+	if !atMostOne(branch, tag) {
+		return nil, fmt.Errorf("only one of branch or tag may be supplied")
 	}
 	dir, err := mktmp()
 	if err != nil {
@@ -293,23 +295,37 @@ func (g *gitrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 		path: dir,
 	}
 
+	quiet := false
 	args := []string{
 		"clone",
 		"-q", // silence progress report to stderr
 		g.url,
 		dir,
 	}
-	if branch != "" {
-		args = append(args, "--branch", branch)
+	if branch != "" && branch != "HEAD" {
+		args = append(args, "--branch", branch, "--single-branch")
+	}
+	if tag != "" {
+		quiet = true // git REALLY wants to tell you how awesome 'detached HEAD' is...
+		args = append(args, "--branch", tag, "--single-branch")
+		args = append(args, "--depth", "1")
+	}
+	if revision == "" {
+		args = append(args, "--depth", "1")
 	}
 
-	if _, err := run("git", args...); err != nil {
+	if quiet {
+		err = runQuiet("git", args...)
+	} else {
+		_, err = run("git", args...)
+	}
+	if err != nil {
 		wc.Destroy()
 		return nil, err
 	}
 
-	if revision != "" || tag != "" {
-		if err := runOutPath(os.Stderr, dir, "git", "checkout", "-q", oneOf(revision, tag)); err != nil {
+	if revision != "" {
+		if err := runOutPath(os.Stderr, dir, "git", "checkout", "-q", revision); err != nil {
 			wc.Destroy()
 			return nil, err
 		}
@@ -506,6 +522,14 @@ func runOut(w io.Writer, c string, args ...string) error {
 	cmd.Stdin = nil
 	cmd.Stdout = w
 	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+func runQuiet(c string, args ...string) error {
+	cmd := exec.Command(c, args...)
+	cmd.Stdin = nil
+	cmd.Stdout = nil
+	cmd.Stderr = nil
 	return cmd.Run()
 }
 
