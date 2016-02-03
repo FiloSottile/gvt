@@ -550,19 +550,23 @@ p.tagline {
 }
 
 .download-bar a.code {
-  background: transparent url(../images/code.png) no-repeat 0 2px;
-  padding-left: 35px;
+  background: transparent url(../images/code.png) no-repeat right 2px;
+  padding-right: 40px;
   margin-top: 8px;
   display: block;
-  float: left;
+  float: right;
   text-indent: 0;
   width: auto;
   height: auto;
   opacity: 1;
-  filter:alpha(opacity=100);  /* IE 5-7 */
+  filter: alpha(opacity=100);
+  margin-right: 5px;
+  margin-bottom: 5px;
+  color: #E6E6E6;
 }
 
 .current-section {
+  display: none;
   position: fixed;
   top: 0;
   left: 50%;
