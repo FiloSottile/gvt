@@ -1,0 +1,177 @@
+<!doctype html>
+<!-- The Time Machine GitHub pages theme was designed and developed by Jon Rohan, on Feb 7, 2012. -->
+<!-- Follow him for fun. http://twitter.com/jonrohan. Tail his code on https://github.com/jonrohan -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <link rel="stylesheet" href="stylesheets/stylesheet.css" media="screen">
+  <link rel="stylesheet" href="stylesheets/github-dark.css">
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script type="text/javascript" src="javascripts/script.js"></script>
+
+  <title>gvt</title>
+  <meta name="description" content="The simplest go vendoring tool">
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+</head>
+
+<body>
+
+  <div class="wrapper">
+    <header>
+      <h1 class="title">gvt</h1>
+    </header>
+    <div id="container">
+      <p class="tagline">The simplest go vendoring tool</p>
+      <div id="main" role="main">
+        <div class="download-bar">
+        <div class="inner">
+          <a href="https://github.com/FiloSottile/gvt/tarball/master" class="download-button tar"><span>Download</span></a>
+          <a href="https://github.com/FiloSottile/gvt/zipball/master" class="download-button zip"><span>Download</span></a>
+          <a href="https://github.com/FiloSottile/gvt" class="code">View gvt on GitHub</a>
+        </div>
+        <span class="blc"></span><span class="trc"></span>
+        </div>
+        <article class="markdown-body">
+          <p><code>gvt</code> is a simple Go vendoring tool made for the GO15VENDOREXPERIMENT, based on <a href="https://github.com/constabulary/gb">gb-vendor</a>.</p>
+
+<p>It lets you easily and "idiomatically" include external dependencies in your repository to get reproducible builds.</p>
+
+<ul>
+<li><p><strong>No need to learn a new tool or format!</strong><br>
+You already know how to use <code>gvt</code>: just run <code>gvt fetch</code> when and like you would run <code>go get</code>. You can imagine what <code>gvt update</code> and <code>gvt delete</code> do.</p></li>
+<li><p><strong>No need to change how you build your project!</strong><br>
+<code>gvt</code> downloads packages to <code>./vendor/...</code>. With <code>GO15VENDOREXPERIMENT=1</code> the stock Go compiler will find and use those dependencies automatically (without import path or GOPATH changes).</p></li>
+<li><p><strong>No need to manually chase, copy or cleanup dependencies!</strong><br>
+<code>gvt</code> works recursively as you would expect, and lets you update vendored dependencies. It also writes a manifest to <code>./vendor/manifest</code> and never touches your system GOPATH. Finally, it strips the VCS metadata so that you can commit the vendored source cleanly.</p></li>
+<li><p><strong>No need for your users and occasional contributors to install or even know about gvt!</strong><br>
+Packages whose dependencies are vendored with <code>gvt</code> are <code>go build</code>-able and <code>go get</code>-able out of the box by Go 1.5 with <code>GO15VENDOREXPERIMENT=1</code> set.</p></li>
+</ul>
+
+<p><em>Note that projects must live within the GOPATH tree in order to be go buildable with the GO15VENDOREXPERIMENT flag.</em></p>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h2>
+
+<pre><code>GO15VENDOREXPERIMENT=1 go get -u github.com/FiloSottile/gvt
+</code></pre>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h2>
+
+<p>You know how to use <code>go get</code>? That's how you use <code>gvt fetch</code>.</p>
+
+<pre><code>$ gvt fetch github.com/fatih/color
+2015/09/05 02:38:06 fetching recursive dependency github.com/mattn/go-isatty
+2015/09/05 02:38:07 fetching recursive dependency github.com/shiena/ansicolor
+
+$ tree -d
+.
+└── vendor
+    └── github.com
+        ├── fatih
+        │   └── color
+        ├── mattn
+        │   └── go-isatty
+        └── shiena
+            └── ansicolor
+                └── ansicolor
+
+9 directories
+
+$ cat &gt; main.go
+package main
+import "github.com/fatih/color"
+func main() {
+    color.Red("Hello, world!")
+}
+
+$ export GO15VENDOREXPERIMENT=1
+$ go build .
+$ ./hello
+Hello, world!
+
+$ git add main.go vendor/ &amp;&amp; git commit
+
+</code></pre>
+
+<p>Full usage on <a href="http://godoc.org/github.com/FiloSottile/gvt">GoDoc <img src="https://godoc.org/github.com/FiloSottile/gvt?status.svg" alt="GoDoc"></a></p>
+
+<p>If you use <code>gvt</code> for your projects, it would definitely make my day better if you dropped a line at <code>gvt -at- filippo.io</code> :)</p>
+
+<h2>
+<a id="alternative-not-checking-in-vendored-source" class="anchor" href="#alternative-not-checking-in-vendored-source" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Alternative: not checking in vendored source</h2>
+
+<p>Some developers prefer not to check in the source of the vendored dependencies. In that case you can add lines like these to e.g. your <code>.gitignore</code></p>
+
+<pre><code>vendor/**
+!vendor/manifest
+</code></pre>
+
+<p>When you check out the source again, you can then run <code>gvt restore</code> to fetch all the dependencies at the revisions specified in the <code>vendor/manifest</code> file.</p>
+
+<p>Please consider that this approach has the following consequences:</p>
+
+<ul>
+<li>the package consumer will need gvt to fetch the dependencies</li>
+<li>the dependencies will need to remain available from the source repositories: if the original repository goes down or rewrites history, build reproducibility is lost</li>
+<li>
+<code>go get</code> won't work on your package</li>
+</ul>
+
+<h2>
+<a id="troubleshooting" class="anchor" href="#troubleshooting" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Troubleshooting</h2>
+
+<h3>
+<a id="error-tag-fetch-not-found" class="anchor" href="#error-tag-fetch-not-found" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><code>error: tag 'fetch' not found.</code>
+</h3>
+
+<p>This kind of errors happens because you have an alias for <code>gvt</code> pointing to <code>git verify-tag</code>.</p>
+
+<p>Run this, or add it to your <code>~/.bashrc</code> / <code>~/.zshrc</code>:</p>
+
+<pre><code>unalias gvt
+</code></pre>
+
+<h3>
+<a id="go-build-cant-find-the-vendored-package" class="anchor" href="#go-build-cant-find-the-vendored-package" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><code>go build</code> can't find the vendored package</h3>
+
+<p>Make sure you set <code>GO15VENDOREXPERIMENT=1</code>.</p>
+
+<p>Also note that GO15VENDOREXPERIMENT does not apply when outside the GOPATH tree. That is, your project must be somewhere in a subfolder of <code>$GOPATH</code>.</p>
+        </article>
+      </div>
+    </div>
+    <footer>
+      <div class="owner">
+      <p><a href="https://github.com/FiloSottile" class="avatar"><img src="https://avatars3.githubusercontent.com/u/1225294?v=3&amp;s=60" width="48" height="48"></a> <a href="https://github.com/FiloSottile">FiloSottile</a> maintains <a href="https://github.com/FiloSottile/gvt">gvt</a></p>
+
+
+      </div>
+      <div class="creds">
+        <small>This page generated using <a href="https://pages.github.com/">GitHub Pages</a><br>theme by <a href="https://twitter.com/jonrohan/">Jon Rohan</a></small>
+      </div>
+    </footer>
+  </div>
+  <div class="current-section">
+    <a href="#top">Scroll to top</a>
+    <a href="https://github.com/FiloSottile/gvt/tarball/master" class="tar">tar</a><a href="https://github.com/FiloSottile/gvt/zipball/master" class="zip">zip</a><a href="" class="code">source code</a>
+    <p class="name"></p>
+  </div>
+
+            <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-37225193-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+</body>
+</html>
