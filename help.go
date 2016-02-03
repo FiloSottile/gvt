@@ -109,8 +109,3 @@ func printUsage(w io.Writer) {
 	tmpl(bw, usageTemplate, commands)
 	bw.Flush()
 }
-
-func usage() {
-	printUsage(os.Stderr)
-	os.Exit(2)
-}

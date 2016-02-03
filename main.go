@@ -2,15 +2,16 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 )
 
-var fs = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+var fs = flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 
 func init() {
-	fs.Usage = usage
+	fs.Usage = func() {}
 }
 
 type Command struct {
@@ -54,17 +55,24 @@ func main() {
 			}
 
 			if err := fs.Parse(args[1:]); err != nil {
-				log.Fatalf("could not parse flags: %v", err)
+				if err == flag.ErrHelp {
+					help(args[:1])
+					os.Exit(0)
+				}
+				fmt.Fprint(os.Stderr, "\n")
+				help(args[:1])
+				os.Exit(3)
 			}
-			args = fs.Args() // reset args to the leftovers from fs.Parse
 
-			if err := command.Run(args); err != nil {
+			if err := command.Run(fs.Args()); err != nil {
 				log.Fatalf("command %q failed: %v", command.Name, err)
 			}
 			return
 		}
 	}
-	log.Fatalf("unknown command %q ", args[0])
+	fmt.Fprintf(os.Stderr, "unknown command: %q\n\n", args[0])
+	printUsage(os.Stderr)
+	os.Exit(3)
 }
 
 const manifestfile = "manifest"
