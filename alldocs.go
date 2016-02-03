@@ -67,21 +67,21 @@ Flags:
 Update a local dependency
 
 Usage:
-        gvt update [-all] import
+        gvt update [ -all | importpath ]
 
-update will replaces the source with the latest available from the head of the master branch.
+update replaces the source with the latest available from the head of the fetched branch.
 
-Updating from one copy of a dependency to another comes with several restrictions.
-The first is you can only update to the head of the branch your dependency was vendored from, switching branches is not supported.
-The second restriction is if you have used -tag or -revision while vendoring a dependency, your dependency is "headless"
-(to borrow a term from git) and cannot be updated.
+Updating from one copy of a dependency to another is ONLY possible when the
+dependency was fetched by branch, without using -tag or -revision. It will be
+updated to the HEAD of that branch, switching branches is not supported.
 
-To update across branches, or from one tag/revision to another, you must first use delete to remove the dependency, then
-fetch [-tag | -revision | -branch ] [-precaire] to replace it.
+To update across branches, or from one tag/revision to another, you must first
+use delete to remove the dependency, then fetch [ -tag | -revision | -branch ]
+to replace it.
 
 Flags:
 	-all
-		will update all dependencies in the manifest, otherwise only the dependency supplied.
+		update all dependencies in the manifest.
 	-precaire
 		allow the use of insecure protocols.
 
