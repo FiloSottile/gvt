@@ -21,7 +21,7 @@ os:
 #   ssh_known_hosts:
 #     - bitbucket.org
 before_install:
-  - ssh-keyscan -t rsa -H bitbucket.org | tee -a $HOME/.ssh/known_hosts
+  - ssh-keyscan -t rsa -T 30 -H bitbucket.org | tee -a $HOME/.ssh/known_hosts
 
 env:
   global:
