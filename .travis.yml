@@ -11,12 +11,13 @@ os:
   - linux
   - osx
 
-before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install homebrew/dupes/openssh; fi
-
-addons:
-  ssh_known_hosts:
-    - bitbucket.org
+# ssh_known_hosts is broken on OS X, run ssh-keyscan manually instead
+# See https://github.com/travis-ci/travis-ci/issues/5596
+# addons:
+#   ssh_known_hosts:
+#     - bitbucket.org
+before_checkout:
+  - ssh-keyscan -t rsa -H bitbucket.org 2>&1 | tee -a $HOME/.ssh/known_hosts
 
 env:
   global:
