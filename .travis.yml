@@ -1,7 +1,7 @@
 language: go
 
 go:
-  - 1.5.2
+  - 1.5.3
   - 1.6rc2
   - tip
 
@@ -28,7 +28,5 @@ env:
     - GO15VENDOREXPERIMENT="1"
 
 install:
-  - true
-
-script:
-  - go test -v ./...
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install bazaar; fi
