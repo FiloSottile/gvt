@@ -47,7 +47,7 @@ Flags:
 	Run: func(args []string) error {
 		switch len(args) {
 		case 0:
-			return restore()
+			return restore(manifestFile())
 		default:
 			return fmt.Errorf("restore takes no arguments")
 		}
@@ -55,8 +55,8 @@ Flags:
 	AddFlags: addRestoreFlags,
 }
 
-func restore() error {
-	m, err := vendor.ReadManifest(manifestFile())
+func restore(manFile string) error {
+	m, err := vendor.ReadManifest(manFile)
 	if err != nil {
 		return fmt.Errorf("could not load manifest: %v", err)
 	}
@@ -69,7 +69,7 @@ func restore() error {
 		go func() {
 			defer wg.Done()
 			for d := range depC {
-				if err := downloadDependency(d); err != nil {
+				if err := downloadDependency(d, vendorDir(), false); err != nil {
 					log.Printf("%s: %v", d.Importpath, err)
 					atomic.AddUint32(&errors, 1)
 				}
@@ -90,8 +90,13 @@ func restore() error {
 	return nil
 }
 
-func downloadDependency(dep vendor.Dependency) error {
-	log.Printf("fetching %s", dep.Importpath)
+func downloadDependency(dep vendor.Dependency, vendorDir string, recursive bool) error {
+	if recursive {
+		log.Printf("fetching recursive %s", dep.Importpath)
+	} else {
+		log.Printf("fetching %s", dep.Importpath)
+	}
+
 	repo, _, err := vendor.DeduceRemoteRepo(dep.Importpath, rbInsecure)
 	if err != nil {
 		return fmt.Errorf("dependency could not be processed: %s", err)
@@ -102,7 +107,7 @@ func downloadDependency(dep vendor.Dependency) error {
 	if err != nil {
 		return fmt.Errorf("dependency could not be fetched: %s", err)
 	}
-	dst := filepath.Join(vendorDir(), dep.Importpath)
+	dst := filepath.Join(vendorDir, dep.Importpath)
 	src := filepath.Join(wc.Dir(), dep.Path)
 
 	if _, err := os.Stat(dst); err == nil {
@@ -117,6 +122,23 @@ func downloadDependency(dep vendor.Dependency) error {
 
 	if err := wc.Destroy(); err != nil {
 		return err
+	}
+
+	// Check for for manifests in dependencies
+	man := filepath.Join(dst, "vendor", "manifest")
+	venDir := filepath.Join(dst, "vendor")
+	if _, err := os.Stat(man); err == nil {
+		m, err := vendor.ReadManifest(man)
+		if err != nil {
+			return fmt.Errorf("could not load manifest: %v", err)
+		}
+		var errors uint32
+		for _, d := range m.Dependencies {
+			if err := downloadDependency(d, venDir, true); err != nil {
+				log.Printf("%s: %v", d.Importpath, err)
+				atomic.AddUint32(&errors, 1)
+			}
+		}
 	}
 
 	return nil
