@@ -1,15 +1,22 @@
 language: go
-go_import_path: github.com/FiloSottile/gvt
+
 go:
   - 1.5.2
-  - 1.4.3
+  - 1.6rc2
   - tip
 
 sudo: false
 
 addons:
   ssh_known_hosts:
-      - bitbucket.org
+    - bitbucket.org
+
+env:
+  global:
+    - GO15VENDOREXPERIMENT="1"
+
+install:
+  - true
 
 script:
   - go test -v ./...
