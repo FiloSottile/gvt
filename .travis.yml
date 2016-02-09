@@ -5,6 +5,10 @@ go:
   - 1.6rc2
   - tip
 
+matrix:
+  allow_failures:
+    - go: tip
+
 sudo: false
 
 os:
