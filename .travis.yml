@@ -20,7 +20,7 @@ os:
 # addons:
 #   ssh_known_hosts:
 #     - bitbucket.org
-before_checkout:
+before_install:
   - ssh-keyscan -t rsa -H bitbucket.org 2>&1 | tee -a $HOME/.ssh/known_hosts
 
 env:
