@@ -11,6 +11,9 @@ os:
   - linux
   - osx
 
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install homebrew/dupes/openssh; fi
+
 addons:
   ssh_known_hosts:
     - bitbucket.org
