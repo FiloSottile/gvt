@@ -69,7 +69,7 @@ func restore(manFile string) error {
 		go func() {
 			defer wg.Done()
 			for d := range depC {
-				if err := downloadDependency(d, vendorDir(), false); err != nil {
+				if err := downloadDependency(d, &errors, vendorDir(), false); err != nil {
 					log.Printf("%s: %v", d.Importpath, err)
 					atomic.AddUint32(&errors, 1)
 				}
@@ -90,7 +90,7 @@ func restore(manFile string) error {
 	return nil
 }
 
-func downloadDependency(dep vendor.Dependency, vendorDir string, recursive bool) error {
+func downloadDependency(dep vendor.Dependency, errors *uint32, vendorDir string, recursive bool) error {
 	if recursive {
 		log.Printf("fetching recursive %s", dep.Importpath)
 	} else {
@@ -132,11 +132,10 @@ func downloadDependency(dep vendor.Dependency, vendorDir string, recursive bool)
 		if err != nil {
 			return fmt.Errorf("could not load manifest: %v", err)
 		}
-		var errors uint32
 		for _, d := range m.Dependencies {
-			if err := downloadDependency(d, venDir, true); err != nil {
+			if err := downloadDependency(d, errors, venDir, true); err != nil {
 				log.Printf("%s: %v", d.Importpath, err)
-				atomic.AddUint32(&errors, 1)
+				atomic.AddUint32(errors, 1)
 			}
 		}
 	}
