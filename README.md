@@ -102,6 +102,11 @@ Please consider that this approach has the following consequences:
 
 ## Troubleshooting
 
+### `fatal: Not a git repository (or any of the parent directories): .git`
+
+Those using oh-my-zsh (for managing your zsh configuration) with notice this error as gvt is aliased.  alias gvt='git verify-tag'.
+In order to remediate, issue command `unalias gvt` and preferably add this to your .zshrc 
+
 ### `error: tag 'fetch' not found.`
 
 This error can occur because you have an alias for `gvt` pointing to `git verify-tag` (common if
@@ -123,4 +128,3 @@ project must be somewhere in a subfolder of `$GOPATH`.
 ## License
 
 MIT licensed. See the LICENSE file for details.
-
