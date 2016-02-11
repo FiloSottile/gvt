@@ -108,11 +108,9 @@ Please consider that this approach has the following consequences:
 These errors can occur because you have an alias for `gvt` pointing to `git verify-tag`
 (default if using oh-my-zsh).
 
-Run this, and preferably add it to your `~/.bashrc` / `~/.zshrc`:
+Recent versions of oh-my-zsh [removed the alias](https://github.com/robbyrussell/oh-my-zsh/pull/4841). You can update with `upgrade_oh_my_zsh`.
 
-```
-unalias gvt
-```
+Alternatively, run this, and preferably add it to your `~/.bashrc` / `~/.zshrc`: `unalias gvt`.
 
 ### `go build` can't find the vendored package
 
