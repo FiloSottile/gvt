@@ -41,7 +41,7 @@ type WorkingCopy interface {
 	// Branch returns the branch to which this working copy belongs.
 	Branch() (string, error)
 
-	// Destroy removes the working copy and cleans path to the working copy.
+	// Destroy removes the working copy.
 	Destroy() error
 }
 
@@ -341,11 +341,7 @@ type workingcopy struct {
 func (w workingcopy) Dir() string { return w.path }
 
 func (w workingcopy) Destroy() error {
-	if err := fileutils.RemoveAll(w.path); err != nil {
-		return err
-	}
-	parent := filepath.Dir(w.path)
-	return cleanPath(parent)
+	return fileutils.RemoveAll(w.path)
 }
 
 // GitClone is a git WorkingCopy.
@@ -492,6 +488,14 @@ func (b *BzrClone) Branch() (string, error) {
 	return "master", nil
 }
 
+func (b *BzrClone) Destroy() error {
+	if err := (workingcopy{b.path}).Destroy(); err != nil {
+		return err
+	}
+	parent := filepath.Dir(b.path)
+	return os.Remove(parent)
+}
+
 func cleanPath(path string) error {
 	if files, _ := ioutil.ReadDir(path); len(files) > 0 || filepath.Base(path) == "vendor" {
 		return nil
@@ -501,10 +505,6 @@ func cleanPath(path string) error {
 		return err
 	}
 	return cleanPath(parent)
-}
-
-func mkdir(path string) error {
-	return os.MkdirAll(path, 0755)
 }
 
 func mktmp() (string, error) {
