@@ -1,9 +1,9 @@
-# gvt, the go vendoring tool
+# gvt, the Go vendoring tool
 [![GoDoc](https://godoc.org/github.com/FiloSottile/gvt?status.svg)](https://godoc.org/github.com/FiloSottile/gvt)
 [![Build Status](https://travis-ci.org/FiloSottile/gvt.svg?branch=master)](https://travis-ci.org/FiloSottile/gvt)
 
-`gvt` is a simple Go vendoring tool made for the
-[GO15VENDOREXPERIMENT](https://docs.google.com/document/d/1Bz5-UB7g2uPBdOx-rw5t9MxJwkfpx90cqG9AFL0JAYo/edit),
+`gvt` is a simple vendoring tool made for Go native vendoring (aka
+[GO15VENDOREXPERIMENT](https://docs.google.com/document/d/1Bz5-UB7g2uPBdOx-rw5t9MxJwkfpx90cqG9AFL0JAYo/edit)),
 based on [gb-vendor](https://github.com/constabulary/gb).
 
 It lets you easily and "idiomatically" include external dependencies in your repository to get
@@ -14,8 +14,9 @@ reproducible builds.
     You can imagine what `gvt update` and `gvt delete` do.
 
   * No need to change how you build your project!  
-    `gvt` downloads packages to `./vendor/...`. With `GO15VENDOREXPERIMENT=1` the stock Go compiler
-    will find and use those dependencies automatically (without import path or GOPATH changes).
+    `gvt` downloads packages to `./vendor/...`. The stock Go compiler will find and use those
+    dependencies automatically without import path rewriting or GOPATH changes.  
+    (Go 1.6+, or Go 1.5 with `GO15VENDOREXPERIMENT=1` set required.)
 
   * No need to manually chase, copy or cleanup dependencies!  
     `gvt` works recursively as you would expect, and lets you update vendored dependencies. It also
@@ -24,20 +25,16 @@ reproducible builds.
 
   * No need for your users and occasional contributors to install **or even know about** gvt!  
     Packages whose dependencies are vendored with `gvt` are `go build`-able and `go get`-able out of
-    the box by Go 1.5 with `GO15VENDOREXPERIMENT=1` set.
+    the box by Go 1.6+, or Go 1.5 with `GO15VENDOREXPERIMENT=1` set.
 
-*Note that projects must live within the GOPATH tree in order to be go buildable with the
-GO15VENDOREXPERIMENT flag.*
-
-If you use and like (or dislike!) `gvt`, it would definitely make my day better if you dropped a
-line at `gvt -at- filippo.io` :)
+*Note that projects must live within the GOPATH tree in order to be `go build`-able with native vendoring.*
 
 ## Installation
 
 With a [correctly configured](https://golang.org/doc/code.html#GOPATH) Go installation:
 
 ```
-GO15VENDOREXPERIMENT=1 go get -u github.com/FiloSottile/gvt
+go get -u github.com/FiloSottile/gvt
 ```
 
 ## Usage
@@ -71,7 +68,9 @@ func main() {
     color.Red("Hello, world!")
 }
 
+# Only needed with Go 1.5, vendoring is on by default in 1.6
 $ export GO15VENDOREXPERIMENT=1
+
 $ go build .
 $ ./hello
 Hello, world!
@@ -114,10 +113,11 @@ Alternatively, run this, and preferably add it to your `~/.bashrc` / `~/.zshrc`:
 
 ### `go build` can't find the vendored package
 
-Make sure you set `GO15VENDOREXPERIMENT=1`.
+Make sure you are using at least Go 1.5, set `GO15VENDOREXPERIMENT=1` if you
+are using Go 1.5 and didn't set `GO15VENDOREXPERIMENT=0` if you are using Go 1.6.
 
-Also note that GO15VENDOREXPERIMENT does not apply when outside the GOPATH tree. That is, your
-project must be somewhere in a subfolder of `$GOPATH`.
+Also note that native vendoring does not work outside the GOPATH tree.
+That is, your project MUST be somewhere in a subfolder of `$GOPATH`.
 
 ## License
 
