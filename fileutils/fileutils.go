@@ -29,22 +29,7 @@ func Copypath(dst string, src string, tests bool) error {
 			return err
 		}
 
-		// https://golang.org/cmd/go/#hdr-Description_of_package_lists
 		name := filepath.Base(path)
-		if strings.HasPrefix(name, ".") ||
-			(strings.HasPrefix(name, "_") && name != "_testdata") ||
-			(!tests && name == "_testdata") ||
-			(!tests && name == "testdata") ||
-			(!tests && strings.HasSuffix(name, "_test.go")) {
-			if info.IsDir() {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-
-		if info.IsDir() {
-			return nil
-		}
 
 		relevantFile := false
 		for _, ext := range goFileTypes {
@@ -53,7 +38,45 @@ func Copypath(dst string, src string, tests bool) error {
 				break
 			}
 		}
-		if !relevantFile {
+
+		testdata := false
+		for _, n := range strings.Split(filepath.Dir(path), string(filepath.Separator)) {
+			if n == "testdata" || n == "_testdata" {
+				testdata = true
+			}
+		}
+
+		skip := false
+		switch {
+		// Include all files in a testdata folder
+		case tests && testdata:
+			skip = false
+
+		// https://golang.org/cmd/go/#hdr-Description_of_package_lists
+		case strings.HasPrefix(name, "."):
+			skip = true
+		case strings.HasPrefix(name, "_") && name != "_testdata":
+			skip = true
+
+		case !tests && name == "_testdata" && info.IsDir():
+			skip = true
+		case !tests && name == "testdata" && info.IsDir():
+			skip = true
+		case !tests && strings.HasSuffix(name, "_test.go") && !info.IsDir():
+			skip = true
+
+		case !relevantFile && !info.IsDir():
+			skip = true
+		}
+
+		if skip {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
+		if info.IsDir() {
 			return nil
 		}
 
