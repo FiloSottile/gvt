@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/constabulary/gb/fileutils"
-
+	"github.com/FiloSottile/gvt/fileutils"
 	"github.com/FiloSottile/gvt/gbvendor"
 )
 

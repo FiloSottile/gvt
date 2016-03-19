@@ -10,8 +10,8 @@ import (
 	"runtime"
 	"sort"
 
+	"github.com/FiloSottile/gvt/fileutils"
 	"github.com/FiloSottile/gvt/gbvendor"
-	"github.com/constabulary/gb/fileutils"
 )
 
 var (
