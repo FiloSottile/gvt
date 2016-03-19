@@ -111,6 +111,10 @@ Flags:
 				return err
 			}
 
+			if err := fileutils.CopyLicense(dst, wc.Dir()); err != nil {
+				return err
+			}
+
 			if err := m.AddDependency(dep); err != nil {
 				return err
 			}

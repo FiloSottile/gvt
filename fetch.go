@@ -130,6 +130,10 @@ func fetch(path string, recurse bool) error {
 		return err
 	}
 
+	if err := fileutils.CopyLicense(dst, wc.Dir()); err != nil {
+		return err
+	}
+
 	if err := vendor.WriteManifest(manifestFile(), m); err != nil {
 		return err
 	}

@@ -4,6 +4,7 @@ package fileutils
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -19,6 +20,10 @@ var goFileTypes = []string{
 	".s", ".S",
 	".swig", ".swigcxx",
 	".syso",
+}
+
+var licenseFiles = []string{
+	"LICENSE", "LICENCE", "UNLICENSE", "COPYING", "COPYRIGHT",
 }
 
 // Copypath copies the contents of src to dst, excluding any file that is not
@@ -151,6 +156,27 @@ func RemoveAll(path string) error {
 		})
 	}
 	return os.RemoveAll(path)
+}
+
+// CopyLicense copies the license file from folder src to folder dst.
+func CopyLicense(dst, src string) error {
+	files, err := ioutil.ReadDir(src)
+	if err != nil {
+		return err
+	}
+	for _, f := range files {
+		if f.IsDir() {
+			continue
+		}
+		name := filepath.Base(f.Name())
+		for _, candidate := range licenseFiles {
+			if strings.ToLower(candidate) == strings.TrimSuffix(
+				strings.TrimSuffix(strings.ToLower(name), ".md"), ".txt") {
+				return Copyfile(filepath.Join(dst, name), f.Name())
+			}
+		}
+	}
+	return nil
 }
 
 func mkdir(path string) error {

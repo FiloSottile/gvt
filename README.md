@@ -49,7 +49,7 @@ $ gvt fetch github.com/fatih/color
 
 `gvt fetch` downloads the dependency into the `vendor` folder.
 
-Files and folders starting with `.` or `_` are ignored. Only [files relevant to the Go compiler](https://golang.org/cmd/go/#hdr-File_types) are fetched.
+Files and folders starting with `.` or `_` are ignored. Only [files relevant to the Go compiler](https://golang.org/cmd/go/#hdr-File_types) are fetched. LICENSE files are always included, too.
 
 Test files and `testdata` folders can be included with `-t`.
 

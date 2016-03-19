@@ -124,6 +124,10 @@ func downloadDependency(dep vendor.Dependency, errors *uint32, vendorDir string,
 		return err
 	}
 
+	if err := fileutils.CopyLicense(dst, wc.Dir()); err != nil {
+		return err
+	}
+
 	if err := wc.Destroy(); err != nil {
 		return err
 	}
