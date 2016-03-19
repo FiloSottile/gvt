@@ -42,11 +42,18 @@ go get -u github.com/FiloSottile/gvt
 You know how to use `go get`? That's how you use `gvt fetch`.
 
 ```
-# This will fetch the dependency into the ./vendor folder.
 $ gvt fetch github.com/fatih/color
 2015/09/05 02:38:06 fetching recursive dependency github.com/mattn/go-isatty
 2015/09/05 02:38:07 fetching recursive dependency github.com/shiena/ansicolor
+```
 
+`gvt fetch` downloads the dependency into the `vendor` folder.
+
+Files and folders starting with `.` or `_` are ignored. Only [files relevant to the Go compiler](https://golang.org/cmd/go/#hdr-File_types) are fetched.
+
+Test files and `testdata` folders can be included with `-t`.
+
+```
 $ tree -d
 .
 └── vendor
@@ -60,7 +67,13 @@ $ tree -d
                 └── ansicolor
 
 9 directories
+```
 
+There's no step 2, you are ready to use the fetched dependency as you would normally do.
+
+(Requires Go 1.6+, or 1.5 with `GO15VENDOREXPERIMENT=1` set.)
+
+```
 $ cat > main.go
 package main
 import "github.com/fatih/color"
@@ -74,12 +87,15 @@ $ export GO15VENDOREXPERIMENT=1
 $ go build .
 $ ./hello
 Hello, world!
-
-$ git add main.go vendor/ && git commit
-
 ```
 
-A full set of example usage can be found on [GoDoc](https://godoc.org/github.com/FiloSottile/gvt).
+Finally, remember to check in and commit the `vendor` folder.
+
+```
+$ git add main.go vendor/ && git commit
+```
+
+A full set of example usage and other commands can be found on [GoDoc](https://godoc.org/github.com/FiloSottile/gvt).
 
 ## Alternative: not checking in vendored source
 
