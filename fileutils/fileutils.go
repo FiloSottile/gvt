@@ -10,18 +10,32 @@ import (
 	"strings"
 )
 
-const debugCopypath = false
-const debugCopyfile = false
+// https://golang.org/cmd/go/#hdr-File_types
+var goFileTypes = []string{
+	".go",
+	".c", ".h",
+	".cc", ".cpp", ".cxx", ".hh", ".hpp", ".hxx",
+	".m",
+	".s", ".S",
+	".swig", ".swigcxx",
+	".syso",
+}
 
-// Copypath copies the contents of src to dst, excluding any file or
-// directory that starts with a period.
-func Copypath(dst string, src string) error {
+// Copypath copies the contents of src to dst, excluding any file that is not
+// relevant to the Go compiler.
+func Copypath(dst string, src string, tests bool) error {
 	err := filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		if strings.HasPrefix(filepath.Base(path), ".") {
+		// https://golang.org/cmd/go/#hdr-Description_of_package_lists
+		name := filepath.Base(path)
+		if strings.HasPrefix(name, ".") ||
+			(strings.HasPrefix(name, "_") && name != "_testdata") ||
+			(!tests && name == "_testdata") ||
+			(!tests && name == "testdata") ||
+			(!tests && strings.HasSuffix(name, "_test.go")) {
 			if info.IsDir() {
 				return filepath.SkipDir
 			}
@@ -29,6 +43,17 @@ func Copypath(dst string, src string) error {
 		}
 
 		if info.IsDir() {
+			return nil
+		}
+
+		relevantFile := false
+		for _, ext := range goFileTypes {
+			if strings.HasSuffix(name, ext) {
+				relevantFile = true
+				break
+			}
+		}
+		if !relevantFile {
 			return nil
 		}
 
@@ -62,9 +87,6 @@ func Copyfile(dst, src string) error {
 		return fmt.Errorf("copyfile: create(%q): %v", dst, err)
 	}
 	defer w.Close()
-	if debugCopyfile {
-		fmt.Printf("copyfile(dst: %v, src: %v)\n", dst, src)
-	}
 	_, err = io.Copy(w, r)
 	return err
 }
@@ -79,9 +101,6 @@ func Copylink(dst, src string) error {
 	}
 	if err := os.Symlink(target, dst); err != nil {
 		return fmt.Errorf("copylink: symlink: %v", err)
-	}
-	if debugCopyfile {
-		fmt.Printf("copylink(dst: %v, src: %v, tgt: %s)\n", dst, src, target)
 	}
 	return nil
 }

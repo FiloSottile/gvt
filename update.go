@@ -106,7 +106,7 @@ Flags:
 			dst := filepath.Join(vendorDir(), filepath.FromSlash(dep.Importpath))
 			src := filepath.Join(wc.Dir(), dep.Path)
 
-			if err := fileutils.Copypath(dst, src); err != nil {
+			if err := fileutils.Copypath(dst, src, true); err != nil {
 				return err
 			}
 

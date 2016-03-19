@@ -116,7 +116,7 @@ func downloadDependency(dep vendor.Dependency, errors *uint32, vendorDir string,
 		}
 	}
 
-	if err := fileutils.Copypath(dst, src); err != nil {
+	if err := fileutils.Copypath(dst, src, true); err != nil {
 		return err
 	}
 
