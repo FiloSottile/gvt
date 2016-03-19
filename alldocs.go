@@ -21,7 +21,7 @@ Use "gvt help [command]" for more information about a command.
 Fetch a remote dependency
 
 Usage:
-        gvt fetch [-branch branch] [-revision rev | -tag tag] [-precaire] [-no-recurse] importpath
+        gvt fetch [-branch branch] [-revision rev | -tag tag] [-precaire] [-no-recurse] [-t] importpath
 
 fetch vendors an upstream import path.
 
@@ -29,6 +29,8 @@ The import path may include a url scheme. This may be useful when fetching depen
 from private repositories that cannot be probed.
 
 Flags:
+	-t
+		fetch also _test.go files and testdata.
 	-branch branch
 		fetch from the named branch. Will also be used by gvt update.
 		If not supplied the default upstream branch will be used.

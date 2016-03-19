@@ -82,6 +82,10 @@ type Dependency struct {
 	// Path is the path inside the Repository where the
 	// dependency was fetched from.
 	Path string `json:"path,omitempty"`
+
+	// NoTests indicates that test files were ignored.
+	// In the negative for backwards compatibility.
+	NoTests bool `json:"notests,omitempty"`
 }
 
 // WriteManifest writes a Manifest to the path. If the manifest does
