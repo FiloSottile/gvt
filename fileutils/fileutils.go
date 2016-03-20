@@ -168,11 +168,10 @@ func CopyLicense(dst, src string) error {
 		if f.IsDir() {
 			continue
 		}
-		name := filepath.Base(f.Name())
 		for _, candidate := range licenseFiles {
 			if strings.ToLower(candidate) == strings.TrimSuffix(
-				strings.TrimSuffix(strings.ToLower(name), ".md"), ".txt") {
-				return Copyfile(filepath.Join(dst, name), f.Name())
+				strings.TrimSuffix(strings.ToLower(f.Name()), ".md"), ".txt") {
+				return Copyfile(filepath.Join(dst, f.Name()), filepath.Join(src, f.Name()))
 			}
 		}
 	}
