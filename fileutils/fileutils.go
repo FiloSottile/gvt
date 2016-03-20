@@ -24,6 +24,7 @@ var goFileTypes = []string{
 
 var licenseFiles = []string{
 	"LICENSE", "LICENCE", "UNLICENSE", "COPYING", "COPYRIGHT",
+	"AUTHORS", "CONTRIBUTORS",
 }
 
 // Copypath copies the contents of src to dst, excluding any file that is not
@@ -171,7 +172,10 @@ func CopyLicense(dst, src string) error {
 		for _, candidate := range licenseFiles {
 			if strings.ToLower(candidate) == strings.TrimSuffix(
 				strings.TrimSuffix(strings.ToLower(f.Name()), ".md"), ".txt") {
-				return Copyfile(filepath.Join(dst, f.Name()), filepath.Join(src, f.Name()))
+				if err := Copyfile(filepath.Join(dst, f.Name()),
+					filepath.Join(src, f.Name())); err != nil {
+					return err
+				}
 			}
 		}
 	}
