@@ -24,7 +24,6 @@ var goFileTypes = []string{
 
 var licenseFiles = []string{
 	"LICENSE", "LICENCE", "UNLICENSE", "COPYING", "COPYRIGHT",
-	"AUTHORS", "CONTRIBUTORS",
 }
 
 // Copypath copies the contents of src to dst, excluding any file that is not
