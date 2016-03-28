@@ -37,7 +37,7 @@ func TestManifest(t *testing.T) {
 
 	mf := filepath.Join(root, "vendor")
 
-	// check that reading an non existant manifest
+	// check that reading an nonexistent manifest
 	// does not return an error
 	m, err := ReadManifest(mf)
 	if err != nil {
