@@ -21,6 +21,7 @@ var (
 	noRecurse bool
 	insecure  bool // Allow the use of insecure protocols
 	tests     bool
+	all       bool
 
 	recurse bool // should we fetch recursively
 )
@@ -32,11 +33,12 @@ func addFetchFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&noRecurse, "no-recurse", false, "do not fetch recursively")
 	fs.BoolVar(&insecure, "precaire", false, "allow the use of insecure protocols")
 	fs.BoolVar(&tests, "t", false, "fetch _test.go files and testdata")
+	fs.BoolVar(&all, "a", false, "fetch all files and subfolders")
 }
 
 var cmdFetch = &Command{
 	Name:      "fetch",
-	UsageLine: "fetch [-branch branch] [-revision rev | -tag tag] [-precaire] [-no-recurse] [-t] importpath",
+	UsageLine: "fetch [-branch branch] [-revision rev | -tag tag] [-precaire] [-no-recurse] [-t|-a] importpath",
 	Short:     "fetch a remote dependency",
 	Long: `fetch vendors an upstream import path.
 
@@ -46,6 +48,8 @@ from private repositories that cannot be probed.
 Flags:
 	-t
 		fetch also _test.go files and testdata.
+	-a
+		fetch all files and subfolders, ignoring ONLY .git, .hg and .bzr.
 	-branch branch
 		fetch from the named branch. Will also be used by gvt update.
 		If not supplied the default upstream branch will be used.
@@ -117,6 +121,7 @@ func fetch(path string, recurse bool) error {
 		Branch:     b,
 		Path:       extra,
 		NoTests:    !tests,
+		AllFiles:   all,
 	}
 
 	if err := m.AddDependency(dep); err != nil {
@@ -126,7 +131,7 @@ func fetch(path string, recurse bool) error {
 	dst := filepath.Join(vendorDir(), dep.Importpath)
 	src := filepath.Join(wc.Dir(), dep.Path)
 
-	if err := fileutils.Copypath(dst, src, !dep.NoTests); err != nil {
+	if err := fileutils.Copypath(dst, src, !dep.NoTests, dep.AllFiles); err != nil {
 		return err
 	}
 

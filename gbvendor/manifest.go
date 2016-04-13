@@ -86,6 +86,9 @@ type Dependency struct {
 	// NoTests indicates that test files were ignored.
 	// In the negative for backwards compatibility.
 	NoTests bool `json:"notests,omitempty"`
+
+	// AllFiles indicates that no files were ignored.
+	AllFiles bool `json:"allfiles,omitempty"`
 }
 
 // WriteManifest writes a Manifest to the path. If the manifest does

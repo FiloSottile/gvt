@@ -28,7 +28,7 @@ var licenseFiles = []string{
 
 // Copypath copies the contents of src to dst, excluding any file that is not
 // relevant to the Go compiler.
-func Copypath(dst string, src string, tests bool) error {
+func Copypath(dst string, src string, tests, all bool) error {
 	err := filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -53,6 +53,9 @@ func Copypath(dst string, src string, tests bool) error {
 
 		skip := false
 		switch {
+		case all && !(name == ".git" && info.IsDir()) && name != ".bzr" && name != ".hg":
+			skip = false
+
 		// Include all files in a testdata folder
 		case tests && testdata:
 			skip = false

@@ -91,14 +91,17 @@ func restore(manFile string) error {
 }
 
 func downloadDependency(dep vendor.Dependency, errors *uint32, vendorDir string, recursive bool) error {
-	testsMsg := ""
+	extraMsg := ""
 	if !dep.NoTests {
-		testsMsg = "(including tests)"
+		extraMsg = "(including tests)"
+	}
+	if dep.AllFiles {
+		extraMsg = "(without file exclusions)"
 	}
 	if recursive {
-		log.Printf("fetching recursive %s %s", dep.Importpath, testsMsg)
+		log.Printf("fetching recursive %s %s", dep.Importpath, extraMsg)
 	} else {
-		log.Printf("fetching %s %s", dep.Importpath, testsMsg)
+		log.Printf("fetching %s %s", dep.Importpath, extraMsg)
 	}
 
 	repo, _, err := vendor.DeduceRemoteRepo(dep.Importpath, rbInsecure)
@@ -120,7 +123,7 @@ func downloadDependency(dep vendor.Dependency, errors *uint32, vendorDir string,
 		}
 	}
 
-	if err := fileutils.Copypath(dst, src, !dep.NoTests); err != nil {
+	if err := fileutils.Copypath(dst, src, !dep.NoTests, dep.AllFiles); err != nil {
 		return err
 	}
 
