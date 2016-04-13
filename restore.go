@@ -107,7 +107,7 @@ func downloadDependency(dep vendor.Dependency, errors *uint32, vendorDir string,
 	}
 	// We can't pass the branch here, and benefit from narrow clones, as the
 	// revision might not be in the branch tree anymore. Thanks rebase.
-	wc, err := repo.Checkout("", "", dep.Revision)
+	wc, err := GlobalDownloader.Get(repo, "", "", dep.Revision)
 	if err != nil {
 		return fmt.Errorf("dependency could not be fetched: %s", err)
 	}
@@ -125,10 +125,6 @@ func downloadDependency(dep vendor.Dependency, errors *uint32, vendorDir string,
 	}
 
 	if err := fileutils.CopyLicense(dst, wc.Dir()); err != nil {
-		return err
-	}
-
-	if err := wc.Destroy(); err != nil {
 		return err
 	}
 

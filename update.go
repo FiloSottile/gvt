@@ -75,7 +75,7 @@ Flags:
 				return fmt.Errorf("could not determine repository for import %q", d.Importpath)
 			}
 
-			wc, err := repo.Checkout(d.Branch, "", "")
+			wc, err := GlobalDownloader.Get(repo, d.Branch, "", "")
 			if err != nil {
 				return err
 			}
@@ -120,10 +120,6 @@ Flags:
 			}
 
 			if err := vendor.WriteManifest(manifestFile(), m); err != nil {
-				return err
-			}
-
-			if err := wc.Destroy(); err != nil {
 				return err
 			}
 		}

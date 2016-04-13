@@ -67,6 +67,9 @@ func main() {
 			if err := command.Run(fs.Args()); err != nil {
 				log.Fatalf("command %q failed: %v", command.Name, err)
 			}
+			if err := GlobalDownloader.Flush(); err != nil {
+				log.Fatalf("failed to delete tempdirs: %v", err)
+			}
 			return
 		}
 	}

@@ -24,9 +24,11 @@ type RemoteRepo interface {
 	// specific.
 	Checkout(branch, tag, revision string) (WorkingCopy, error)
 
-	// URL returns the URL the clone was taken from. It should
-	// only be called after Clone.
+	// URL returns the URL the clone was/will be taken from.
 	URL() string
+
+	// Type returns the repository type (git, hg, ...)
+	Type() string
 }
 
 // WorkingCopy represents a local copy of a remote dvcs repository.
@@ -274,6 +276,10 @@ func (g *gitrepo) URL() string {
 	return g.url
 }
 
+func (g *gitrepo) Type() string {
+	return "git"
+}
+
 // Checkout fetchs the remote branch, tag, or revision. If the branch is blank,
 // then the default remote branch will be used. If the branch is "HEAD" and
 // revision is empty, an impossible update is assumed.
@@ -380,7 +386,8 @@ type hgrepo struct {
 	url string
 }
 
-func (h *hgrepo) URL() string { return h.url }
+func (h *hgrepo) URL() string  { return h.url }
+func (h *hgrepo) Type() string { return "hg" }
 
 func (h *hgrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 	if !atMostOne(tag, revision) {
@@ -452,6 +459,10 @@ type bzrrepo struct {
 
 func (b *bzrrepo) URL() string {
 	return b.url
+}
+
+func (b *bzrrepo) Type() string {
+	return "bzr"
 }
 
 func (b *bzrrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {

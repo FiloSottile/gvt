@@ -94,7 +94,7 @@ func fetch(path string, recurse bool) error {
 		return fmt.Errorf("%s is already vendored", path)
 	}
 
-	wc, err := repo.Checkout(branch, tag, revision)
+	wc, err := GlobalDownloader.Get(repo, branch, tag, revision)
 
 	if err != nil {
 		return err
@@ -135,10 +135,6 @@ func fetch(path string, recurse bool) error {
 	}
 
 	if err := vendor.WriteManifest(manifestFile(), m); err != nil {
-		return err
-	}
-
-	if err := wc.Destroy(); err != nil {
 		return err
 	}
 
