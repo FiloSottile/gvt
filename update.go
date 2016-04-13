@@ -97,6 +97,7 @@ Flags:
 				Branch:     branch,
 				Path:       extra,
 				NoTests:    d.NoTests,
+				AllFiles:   d.AllFiles,
 			}
 
 			if err := fileutils.RemoveAll(filepath.Join(vendorDir(), filepath.FromSlash(d.Importpath))); err != nil {
