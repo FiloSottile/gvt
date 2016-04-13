@@ -117,6 +117,7 @@ func fetch(path string, recurse bool) error {
 	dep := vendor.Dependency{
 		Importpath: path,
 		Repository: repo.URL(),
+		VCS:        repo.Type(),
 		Revision:   rev,
 		Branch:     b,
 		Path:       extra,

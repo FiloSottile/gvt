@@ -141,5 +141,15 @@ func TestDeduceRemoteRepo(t *testing.T) {
 		if !reflect.DeepEqual(got, tt.want) || extra != tt.extra {
 			t.Errorf("DeduceRemoteRepo(%q): want %#v, %v, got %#v, %v", tt.path, tt.want, tt.extra, got, extra)
 		}
+
+		if tt.want != nil {
+			got, err := NewRemoteRepo(tt.want.URL(), tt.want.Type(), tt.insecure)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewRemoteRepo(%s, %s): want %#v, got %#v", tt.want.URL(), tt.want.Type(), tt.want, got)
+			}
+		}
 	}
 }

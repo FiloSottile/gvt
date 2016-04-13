@@ -115,6 +115,17 @@ Please consider that this approach has the following consequences:
     repository goes down or rewrites history, build reproducibility is lost
   * `go get` won't work on your package
 
+## Vendoring a different fork
+
+You might have your own version of a repository (i.e. a fork) but still want to
+vendor it at the original import path.
+
+Since this is not a common use-case, there's no support in `gvt fetch` for it,
+however, you can manually edit the `vendor/manifest` file, changing `repository`
+and `revision`, and then run `gvt restore`.
+
+`gvt update` will stay on your fork.
+
 ## Troubleshooting
 
 ### `fatal: Not a git repository [...]`

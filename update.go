@@ -70,7 +70,7 @@ Flags:
 				return fmt.Errorf("dependency could not be deleted from manifest: %v", err)
 			}
 
-			repo, extra, err := vendor.DeduceRemoteRepo(d.Importpath, insecure)
+			repo, err := vendor.NewRemoteRepo(d.Repository, d.VCS, insecure)
 			if err != nil {
 				return fmt.Errorf("could not determine repository for import %q", d.Importpath)
 			}
@@ -93,9 +93,10 @@ Flags:
 			dep := vendor.Dependency{
 				Importpath: d.Importpath,
 				Repository: repo.URL(),
+				VCS:        repo.Type(),
 				Revision:   rev,
 				Branch:     branch,
-				Path:       extra,
+				Path:       d.Path,
 				NoTests:    d.NoTests,
 				AllFiles:   d.AllFiles,
 			}

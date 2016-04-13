@@ -184,6 +184,34 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 	}
 }
 
+func NewRemoteRepo(repoURL, vcs string, insecure bool) (RemoteRepo, error) {
+	u, err := url.Parse(repoURL)
+	if err != nil {
+		return nil, fmt.Errorf("%q is not a valid import path", repoURL)
+	}
+	switch vcs {
+	case "git":
+		return Gitrepo(u, insecure, u.Scheme)
+	case "hg":
+		return Hgrepo(u, insecure, u.Scheme)
+	case "bzr":
+		return Bzrrepo(repoURL)
+	case "":
+		// for backwards compatibility with manifests that miss the VCS entry
+		if repo, err := Gitrepo(u, insecure, u.Scheme); err == nil {
+			return repo, nil
+		}
+		if repo, err := Hgrepo(u, insecure, u.Scheme); err == nil {
+			return repo, nil
+		}
+		if repo, err := Bzrrepo(repoURL); err == nil {
+			return repo, nil
+		}
+		return nil, fmt.Errorf("can't reach %q", repoURL)
+	}
+	return nil, fmt.Errorf("%q is not a valid VCS", vcs)
+}
+
 // Gitrepo returns a RemoteRepo representing a remote git repository.
 func Gitrepo(url *url.URL, insecure bool, schemes ...string) (RemoteRepo, error) {
 	if len(schemes) == 0 {

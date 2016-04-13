@@ -80,6 +80,7 @@ func TestEmptyPathIsNotWritten(t *testing.T) {
 		Dependencies: []Dependency{{
 			Importpath: "github.com/foo/bar",
 			Repository: "https://github.com/foo/bar",
+			VCS:        "git",
 			Revision:   "abcdef",
 			Branch:     "master",
 		}},
@@ -94,6 +95,7 @@ func TestEmptyPathIsNotWritten(t *testing.T) {
 		{
 			"importpath": "github.com/foo/bar",
 			"repository": "https://github.com/foo/bar",
+			"vcs": "git",
 			"revision": "abcdef",
 			"branch": "master"
 		}

@@ -104,7 +104,7 @@ func downloadDependency(dep vendor.Dependency, errors *uint32, vendorDir string,
 		log.Printf("fetching %s %s", dep.Importpath, extraMsg)
 	}
 
-	repo, _, err := vendor.DeduceRemoteRepo(dep.Importpath, rbInsecure)
+	repo, err := vendor.NewRemoteRepo(dep.Repository, dep.VCS, rbInsecure)
 	if err != nil {
 		return fmt.Errorf("dependency could not be processed: %s", err)
 	}

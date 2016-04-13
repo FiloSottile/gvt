@@ -71,6 +71,9 @@ type Dependency struct {
 	// dependency was fetched from.
 	Repository string `json:"repository"`
 
+	// VCS is the DVCS system found at Repository.
+	VCS string `json:"vcs"`
+
 	// Revision is the revision that describes the dependency's
 	// remote revision.
 	Revision string `json:"revision"`
