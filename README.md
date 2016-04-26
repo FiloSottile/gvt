@@ -143,8 +143,8 @@ Alternatively, run this, and preferably add it to your `~/.bashrc` / `~/.zshrc`:
 Make sure you are using at least Go 1.5, set `GO15VENDOREXPERIMENT=1` if you
 are using Go 1.5 and didn't set `GO15VENDOREXPERIMENT=0` if you are using Go 1.6.
 
-Also note that native vendoring does not work outside the GOPATH tree.
-That is, your project MUST be somewhere in a subfolder of `$GOPATH`.
+Also note that native vendoring does not work outside the GOPATH source tree.
+That is, your project MUST be somewhere in a subfolder of `$GOPATH/src/`.
 
 ## License
 
