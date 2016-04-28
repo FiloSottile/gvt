@@ -4,25 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"os"
-	"path/filepath"
 	"reflect"
 	"testing"
 )
-
-func TestParseImports(t *testing.T) {
-	root := filepath.Join(getwd(t), "_testdata", "src")
-
-	got, err := ParseImports(root)
-	if err != nil {
-		t.Fatalf("ParseImports(%q): %v", root, err)
-	}
-
-	want := set("fmt", "github.com/quux/flobble", "github.com/lypo/moopo", "github.com/hoo/wuu")
-	if !reflect.DeepEqual(got, want) {
-		t.Fatalf("ParseImports(%q): want: %v, got %v", root, want, got)
-	}
-}
 
 func TestFetchMetadata(t *testing.T) {
 	if testing.Short() {
@@ -150,12 +134,4 @@ func TestParseMetadata(t *testing.T) {
 			t.Errorf("ParseMetadata(%q): want %s %s %s, got %s %s %s ", tt.path, tt.importpath, tt.vcs, tt.reporoot, importpath, vcs, reporoot)
 		}
 	}
-}
-
-func getwd(t *testing.T) string {
-	cwd, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	return cwd
 }
