@@ -51,6 +51,10 @@ Flags:
 			if err != nil {
 				return fmt.Errorf("could not get dependency: %v", err)
 			}
+			if p != dependency.Importpath {
+				return fmt.Errorf("a parent of the specified dependency is vendored, remove that instead: %v",
+					dependency.Importpath)
+			}
 			dependencies = append(dependencies, dependency)
 		}
 

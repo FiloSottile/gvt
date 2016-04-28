@@ -3,11 +3,13 @@ package vendor
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"reflect"
 	"sort"
+	"strings"
 )
 
 // gb-vendor manifest support
@@ -21,11 +23,20 @@ type Manifest struct {
 	Dependencies []Dependency `json:"dependencies"`
 }
 
+var (
+	depPresent       = errors.New("dependency already present")
+	depSubPkgPresent = errors.New("subpackages of this dependency are already present")
+	depMissing       = errors.New("dependency does not exist")
+)
+
 // AddDependency adds a Dependency to the current Manifest.
 // If the dependency exists already then it returns and error.
 func (m *Manifest) AddDependency(dep Dependency) error {
 	if m.HasImportpath(dep.Importpath) {
-		return fmt.Errorf("already registered")
+		return depPresent
+	}
+	if m.GetSubpackages(dep.Importpath) != nil {
+		return depSubPkgPresent
 	}
 	m.Dependencies = append(m.Dependencies, dep)
 	return nil
@@ -40,24 +51,37 @@ func (m *Manifest) RemoveDependency(dep Dependency) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("dependency does not exist")
+	return depMissing
 }
 
-// HasImportpath reports whether the Manifest contains the import path.
+// HasImportpath reports whether the Manifest contains the import path,
+// or a parent of it.
 func (m *Manifest) HasImportpath(path string) bool {
 	_, err := m.GetDependencyForImportpath(path)
 	return err == nil
 }
 
-// GetDependencyForRepository return a dependency for specified URL
-// If the dependency does not exist it returns an error
+// GetDependencyForRepository return a dependency for specified import
+// path. Note that it might be a parent of the specified path.
+// If the dependency does not exist it returns an error.
 func (m *Manifest) GetDependencyForImportpath(path string) (Dependency, error) {
 	for _, d := range m.Dependencies {
-		if d.Importpath == path {
+		if strings.HasPrefix(path, d.Importpath) {
 			return d, nil
 		}
 	}
 	return Dependency{}, fmt.Errorf("dependency for %s does not exist", path)
+}
+
+// GetSubpackages returns any Dependency in the Manifest that is a subpackage
+// of the given import path.
+func (m *Manifest) GetSubpackages(path string) (deps []Dependency) {
+	for _, d := range m.Dependencies {
+		if path != d.Importpath && strings.HasPrefix(d.Importpath, path) {
+			deps = append(deps, d)
+		}
+	}
+	return
 }
 
 // Dependency describes one vendored import path of code
@@ -142,13 +166,24 @@ func ReadManifest(path string) (*Manifest, error) {
 		return nil, err
 	}
 	defer f.Close()
-	return readManifest(f)
-}
 
-func readManifest(r io.Reader) (*Manifest, error) {
 	var m Manifest
-	d := json.NewDecoder(r)
-	err := d.Decode(&m)
+	d := json.NewDecoder(f)
+	err = d.Decode(&m)
+
+	// Pass all dependencies through AddDependency to detect overlap
+	deps := m.Dependencies
+	m.Dependencies = nil
+	sort.Sort(byImportpath(deps)) // so that subpackages come after parents
+	for _, d := range deps {
+		if err := m.AddDependency(d); err == depPresent {
+			fmt.Fprintln(os.Stderr, "WARNING: overlapping dependency detected:", d.Importpath)
+			fmt.Fprintln(os.Stderr, "The subpackage will be ignored to fix undefined behavior. See https://git.io/vwK4B")
+		} else if err != nil {
+			return nil, err
+		}
+	}
+
 	return &m, err
 }
 
