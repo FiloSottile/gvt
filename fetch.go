@@ -42,6 +42,9 @@ var cmdFetch = &Command{
 	Short:     "fetch a remote dependency",
 	Long: `fetch vendors an upstream import path.
 
+Recursive dependencies are fetched at their master/tip/HEAD revision, unless they
+or their parent package is already present.
+
 The import path may include a url scheme. This may be useful when fetching dependencies
 from private repositories that cannot be probed.
 

@@ -118,6 +118,8 @@ Please consider that this approach has the following consequences:
   * the dependencies will need to remain available from the source repositories: if the original
     repository goes down or rewrites history, build reproducibility is lost
   * `go get` won't work on your package
+  * unless you pin the gvt version, bugs and unintended changes introduced in how `gvt restore`
+    behaves can affect your build
 
 ## Vendoring a different fork
 
@@ -129,6 +131,24 @@ however, you can manually edit the `vendor/manifest` file, changing `repository`
 and `revision`, and then run `gvt restore`.
 
 `gvt update` will stay on your fork.
+
+## Overlapping dependencies
+
+Since in the current manifest, inherited from gb-vendor, a dependency includes
+all subpackages, it is possible to get conflicts in the form of overlapping dependencies.
+For example, if we had one version of example.com/a and a different one of example.com/a/b.
+
+To solve this cleanly, ovelaps are disallowed. Subpackages of existing dependencies are
+silently treated as existing dependencies. Parents of existing dependencies are treated
+as missing and cause the subpackages to be deleted when they are fetched.
+
+This rule might be arbitrary, but it is required to have determinism in situations like
+recursive fetches, where the orders and priorities of fetches are undefined.
+If it causes incompatibilities, they were for the human to fix anyway.
+
+(There's an exception, if you want to nitpick, and it's that if you fetch a package at a revision,
+and its parent ends up being fetched by the recursive resolution, the parent will be fetched at
+the revision, not at master, because that's probably what you meant.)
 
 ## Troubleshooting
 
