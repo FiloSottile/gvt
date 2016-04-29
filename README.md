@@ -11,7 +11,8 @@ reproducible builds.
 
   * No need to learn a new tool or format!  
     You already know how to use `gvt`: just run `gvt fetch` when and like you would run `go get`.
-    You can imagine what `gvt update` and `gvt delete` do.
+    You can imagine what `gvt update` and `gvt delete` do. In addition, `gvt` [also allows](https://godoc.org/github.com/FiloSottile/gvt#hdr-Fetch_a_remote_dependency)
+    fetching specific commits or branch versions in packages, and fully accommodates private repos. 
 
   * No need to change how you build your project!  
     `gvt` downloads packages to `./vendor/...`. The stock Go compiler will find and use those
