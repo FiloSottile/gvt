@@ -37,9 +37,9 @@ With a [correctly configured](https://golang.org/doc/code.html#GOPATH) Go instal
 go get -u github.com/FiloSottile/gvt
 ```
 
-## Usage
+## Basic usage
 
-You know how to use `go get`? That's how you use `gvt fetch`.
+When you would use `go get`, just use `gvt fetch` instead.
 
 ```
 $ gvt fetch github.com/fatih/color
@@ -50,7 +50,6 @@ $ gvt fetch github.com/fatih/color
 `gvt fetch` downloads the dependency into the `vendor` folder.
 
 Files and folders starting with `.` or `_` are ignored. Only [files relevant to the Go compiler](https://golang.org/cmd/go/#hdr-File_types) are fetched. LICENSE files are always included, too.
-
 Test files and `testdata` folders can be included with `-t`. To include all files (except the repository metadata), use `-a`.
 
 ```
@@ -95,7 +94,11 @@ Finally, remember to check in and commit the `vendor` folder.
 $ git add main.go vendor/ && git commit
 ```
 
-A full set of example usage and other commands can be found on [GoDoc](https://godoc.org/github.com/FiloSottile/gvt).
+## Full usage
+
+`fetch` offers options to download specific versions, and there are `update`, `list` and `delete` commands that do what you would expect.
+
+View the full manual on GoDoc: https://godoc.org/github.com/FiloSottile/gvt
 
 ## Alternative: not checking in vendored source
 
