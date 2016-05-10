@@ -159,7 +159,7 @@ func fetchRecursive(m *vendor.Manifest, fullPath string, level int) error {
 
 	// Find and download the repository
 
-	repo, extra, err := vendor.DeduceRemoteRepo(fullPath, insecure)
+	repo, extra, err := GlobalDownloader.DeduceRemoteRepo(fullPath, insecure)
 	if err != nil {
 		return err
 	}
