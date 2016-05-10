@@ -3,12 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"go/build"
 	"log"
 	"net/url"
+	"os"
 	"path/filepath"
-	"runtime"
-	"sort"
+	"strings"
 
 	"github.com/FiloSottile/gvt/fileutils"
 	"github.com/FiloSottile/gvt/gbvendor"
@@ -22,8 +21,6 @@ var (
 	insecure  bool // Allow the use of insecure protocols
 	tests     bool
 	all       bool
-
-	recurse bool // should we fetch recursively
 )
 
 func addFetchFlags(fs *flag.FlagSet) {
@@ -42,8 +39,10 @@ var cmdFetch = &Command{
 	Short:     "fetch a remote dependency",
 	Long: `fetch vendors an upstream import path.
 
-Recursive dependencies are fetched at their master/tip/HEAD revision, unless they
-or their parent package is already present.
+Recursive dependencies are fetched (at their master/tip/HEAD revision), unless they
+or their parent package are already present.
+
+If a subpackage of a dependency being fetched is already present, it will be deleted.
 
 The import path may include a url scheme. This may be useful when fetching dependencies
 from private repositories that cannot be probed.
@@ -73,8 +72,7 @@ Flags:
 			return fmt.Errorf("fetch: import path missing")
 		case 1:
 			path := args[0]
-			recurse = !noRecurse
-			return fetch(path, recurse)
+			return fetch(path)
 		default:
 			return fmt.Errorf("more than one import path supplied")
 		}
@@ -82,30 +80,101 @@ Flags:
 	AddFlags: addFetchFlags,
 }
 
-func fetch(path string, recurse bool) error {
-	m, err := vendor.ReadManifest(manifestFile())
+var (
+	fetchRoot    string   // where the current session started
+	fetchedToday []string // packages fetched during this session
+)
+
+func fetch(path string) error {
+	m, err := vendor.ReadManifest(manifestFile)
 	if err != nil {
 		return fmt.Errorf("could not load manifest: %v", err)
 	}
 
-	repo, extra, err := vendor.DeduceRemoteRepo(path, insecure)
-	if err != nil {
-		return err
+	fetchRoot = stripscheme(path)
+	return fetchRecursive(m, path, 0)
+}
+
+func fetchRecursive(m *vendor.Manifest, fullPath string, level int) error {
+	path := stripscheme(fullPath)
+
+	// Don't even bother the user about skipping packages we just fetched
+	for _, p := range fetchedToday {
+		if contains(p, path) {
+			return nil
+		}
 	}
 
-	// strip of any scheme portion from the path, it is already
-	// encoded in the repo.
-	path = stripscheme(path)
-
+	// First, check if this or a parent is already vendored
 	if m.HasImportpath(path) {
-		return fmt.Errorf("%s is already vendored", path)
+		if level == 0 {
+			return fmt.Errorf("%s or a parent of it is already vendored", path)
+		} else {
+			// TODO: print a different message for packages fetched during this session
+			logIndent(level, "Skipping (existing):", path)
+			return nil
+		}
 	}
 
-	wc, err := GlobalDownloader.Get(repo, branch, tag, revision)
+	// Next, check if we are trying to vendor from the same repository we are in
+	if importPath != "" && contains(importPath, path) {
+		if level == 0 {
+			return fmt.Errorf("refusing to vendor a subpackage of \".\"")
+		} else {
+			logIndent(level, "Skipping (subpackage of \".\"):", path)
+			return nil
+		}
+	}
 
+	if level == 0 {
+		log.Println("Fetching:", path)
+	} else {
+		logIndent(level, "Fetching recursive dependency:", path)
+	}
+
+	// Finally, check if we already vendored a subpackage and remove it
+	parentOfRoot := false
+	for _, subp := range m.GetSubpackages(path) {
+		if contains(subp.Importpath, fetchRoot) {
+			// Through dependencies we ended up fetching a parent of the starting package
+			parentOfRoot = true // use the requested tag/branch/revision
+		} else {
+			ignore := false
+			for _, d := range fetchedToday {
+				if contains(d, subp.Importpath) {
+					ignore = true // No need to warn the user if we just downloaded it
+				}
+			}
+			if !ignore {
+				logIndent(level, "Deleting existing subpackage to prevent overlap:", subp.Importpath)
+			}
+		}
+		if err := m.RemoveDependency(subp); err != nil {
+			return fmt.Errorf("failed to remove subpackage: %v", err)
+		}
+	}
+	if err := fileutils.RemoveAll(filepath.Join(vendorDir, path)); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to remove existing folder: %v", err)
+	}
+
+	// Find and download the repository
+
+	repo, extra, err := vendor.DeduceRemoteRepo(fullPath, insecure)
 	if err != nil {
 		return err
 	}
+
+	var wc vendor.WorkingCopy
+	if level == 0 || parentOfRoot {
+		wc, err = GlobalDownloader.Get(repo, branch, tag, revision)
+	} else {
+		wc, err = GlobalDownloader.Get(repo, "", "", "")
+	}
+	if err != nil {
+		return err
+	}
+
+	// Add the dependency to the manifest
 
 	rev, err := wc.Revision()
 	if err != nil {
@@ -132,7 +201,9 @@ func fetch(path string, recurse bool) error {
 		return err
 	}
 
-	dst := filepath.Join(vendorDir(), dep.Importpath)
+	// Copy the code to the vendor folder
+
+	dst := filepath.Join(vendorDir, dep.Importpath)
 	src := filepath.Join(wc.Dir(), dep.Path)
 
 	if err := fileutils.Copypath(dst, src, !dep.NoTests, dep.AllFiles); err != nil {
@@ -143,59 +214,36 @@ func fetch(path string, recurse bool) error {
 		return err
 	}
 
-	if err := vendor.WriteManifest(manifestFile(), m); err != nil {
+	if err := vendor.WriteManifest(manifestFile, m); err != nil {
 		return err
 	}
 
-	if !recurse {
-		return nil
-	}
+	// Recurse
 
-	// if we are recursing, overwrite branch, tag and revision
-	// values so recursive fetching checks out from HEAD.
-	branch = ""
-	tag = ""
-	revision = ""
+	fetchedToday = append(fetchedToday, path)
 
-	for done := false; !done; {
-
-		paths := []struct {
-			Root, Prefix string
-		}{
-			{filepath.Join(runtime.GOROOT(), "src"), ""},
+	if !noRecurse {
+		// Look for dependencies in src, not going past wc.Dir() when looking for /vendor/,
+		// knowing that wc.Dir() corresponds to rootRepoPath
+		if !strings.HasSuffix(dep.Importpath, dep.Path) {
+			return fmt.Errorf("unable to derive the root repo import path")
 		}
-		m, err := vendor.ReadManifest(manifestFile())
+		rootRepoPath := strings.TrimRight(strings.TrimSuffix(dep.Importpath, dep.Path), "/")
+		deps, err := vendor.ParseImports(src, wc.Dir(), rootRepoPath)
 		if err != nil {
-			return err
-		}
-		for _, d := range m.Dependencies {
-			paths = append(paths, struct{ Root, Prefix string }{filepath.Join(vendorDir(), filepath.FromSlash(d.Importpath)), filepath.FromSlash(d.Importpath)})
+			return fmt.Errorf("failed to parse imports: %s", err)
 		}
 
-		dsm, err := vendor.LoadPaths(paths...)
-		if err != nil {
-			return err
-		}
-
-		is, ok := dsm[filepath.Join(vendorDir(), path)]
-		if !ok {
-			return fmt.Errorf("unable to locate depset for %q", path)
-		}
-
-		missing := findMissing(pkgs(is.Pkgs), dsm)
-		switch len(missing) {
-		case 0:
-			done = true
-		default:
-
-			// sort keys in ascending order, so the shortest missing import path
-			// with be fetched first.
-			keys := keys(missing)
-			sort.Strings(keys)
-			pkg := keys[0]
-			log.Printf("fetching recursive dependency %s", pkg)
-			if err := fetch(pkg, false); err != nil {
-				return err
+		for d := range deps {
+			if strings.Index(d, ".") == -1 { // TODO: replace this silly heuristic
+				continue
+			}
+			if err := fetchRecursive(m, d, level+1); err != nil {
+				if strings.HasPrefix(err.Error(), "error fetching") { // I know, ok?
+					return err
+				} else {
+					return fmt.Errorf("error fetching %s: %s", d, err)
+				}
 			}
 		}
 	}
@@ -203,88 +251,10 @@ func fetch(path string, recurse bool) error {
 	return nil
 }
 
-func keys(m map[string]bool) []string {
-	var s []string
-	for k := range m {
-		s = append(s, k)
-	}
-	return s
-}
-
-func pkgs(m map[string]*vendor.Pkg) []*vendor.Pkg {
-	var p []*vendor.Pkg
-	for _, v := range m {
-		p = append(p, v)
-	}
-	return p
-}
-
-func findMissing(pkgs []*vendor.Pkg, dsm map[string]*vendor.Depset) map[string]bool {
-	missing := make(map[string]bool)
-	imports := make(map[string]*vendor.Pkg)
-	for _, s := range dsm {
-		for _, p := range s.Pkgs {
-			imports[p.ImportPath] = p
-		}
-	}
-
-	// make fake C package for cgo
-	imports["C"] = &vendor.Pkg{
-		Depset: nil, // probably a bad idea
-		Package: &build.Package{
-			Name: "C",
-		},
-	}
-	stk := make(map[string]bool)
-	push := func(v string) {
-		if stk[v] {
-			panic(fmt.Sprintln("import loop:", v, stk))
-		}
-		stk[v] = true
-	}
-	pop := func(v string) {
-		if !stk[v] {
-			panic(fmt.Sprintln("impossible pop:", v, stk))
-		}
-		delete(stk, v)
-	}
-
-	// checked records import paths who's dependencies are all present
-	checked := make(map[string]bool)
-
-	var fn func(string)
-	fn = func(importpath string) {
-		p, ok := imports[importpath]
-		if !ok {
-			missing[importpath] = true
-			return
-		}
-
-		// have we already walked this arm, if so, skip it
-		if checked[importpath] {
-			return
-		}
-
-		sz := len(missing)
-		push(importpath)
-		for _, i := range p.Imports {
-			if i == importpath {
-				continue
-			}
-			fn(i)
-		}
-
-		// if the size of the missing map has not changed
-		// this entire subtree is complete, mark it as such
-		if len(missing) == sz {
-			checked[importpath] = true
-		}
-		pop(importpath)
-	}
-	for _, pkg := range pkgs {
-		fn(pkg.ImportPath)
-	}
-	return missing
+func logIndent(level int, v ...interface{}) {
+	prefix := strings.Repeat("·", level)
+	v = append([]interface{}{prefix}, v...)
+	log.Println(v...)
 }
 
 // stripscheme removes any scheme components from url like paths.
@@ -294,4 +264,9 @@ func stripscheme(path string) string {
 		panic(err)
 	}
 	return u.Host + u.Path
+}
+
+// Package a contains package b?
+func contains(a, b string) bool {
+	return a == b || strings.HasPrefix(b, a+"/")
 }

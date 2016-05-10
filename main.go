@@ -3,9 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"go/build"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var fs = flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
@@ -78,16 +80,22 @@ func main() {
 	os.Exit(3)
 }
 
-const manifestfile = "manifest"
+var (
+	vendorDir, manifestFile string
+	importPath              string
+)
 
-func vendorDir() string {
+func init() {
 	wd, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
 	}
-	return filepath.Join(wd, "vendor")
-}
-
-func manifestFile() string {
-	return filepath.Join(vendorDir(), manifestfile)
+	vendorDir = filepath.Join(wd, "vendor")
+	manifestFile = filepath.Join(vendorDir, "manifest")
+	srcTree := filepath.Join(build.Default.GOPATH, "src") + string(filepath.Separator)
+	if build.Default.GOPATH == "" || !strings.HasPrefix(wd, srcTree) {
+		log.Println("WARNING: for go vendoring to work your project needs to be somewhere under $GOPATH/src/")
+	} else {
+		importPath = filepath.ToSlash(strings.TrimPrefix(wd, srcTree))
+	}
 }

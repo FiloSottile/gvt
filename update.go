@@ -46,7 +46,7 @@ Flags:
 			return fmt.Errorf("update: you cannot specify path and -all flag at once")
 		}
 
-		m, err := vendor.ReadManifest(manifestFile())
+		m, err := vendor.ReadManifest(manifestFile)
 		if err != nil {
 			return fmt.Errorf("could not load manifest: %v", err)
 		}
@@ -101,12 +101,12 @@ Flags:
 				AllFiles:   d.AllFiles,
 			}
 
-			if err := fileutils.RemoveAll(filepath.Join(vendorDir(), filepath.FromSlash(d.Importpath))); err != nil {
+			if err := fileutils.RemoveAll(filepath.Join(vendorDir, filepath.FromSlash(d.Importpath))); err != nil {
 				// TODO(dfc) need to apply vendor.cleanpath here to remove intermediate directories.
 				return fmt.Errorf("dependency could not be deleted: %v", err)
 			}
 
-			dst := filepath.Join(vendorDir(), filepath.FromSlash(dep.Importpath))
+			dst := filepath.Join(vendorDir, filepath.FromSlash(dep.Importpath))
 			src := filepath.Join(wc.Dir(), dep.Path)
 
 			if err := fileutils.Copypath(dst, src, !d.NoTests, d.AllFiles); err != nil {
@@ -121,7 +121,7 @@ Flags:
 				return err
 			}
 
-			if err := vendor.WriteManifest(manifestFile(), m); err != nil {
+			if err := vendor.WriteManifest(manifestFile, m); err != nil {
 				return err
 			}
 		}

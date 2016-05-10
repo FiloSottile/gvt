@@ -31,7 +31,7 @@ Flags:
 
 `,
 	Run: func(args []string) error {
-		m, err := vendor.ReadManifest(manifestFile())
+		m, err := vendor.ReadManifest(manifestFile)
 		if err != nil {
 			return fmt.Errorf("could not load manifest: %v", err)
 		}

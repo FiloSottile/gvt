@@ -25,6 +25,11 @@ Usage:
 
 fetch vendors an upstream import path.
 
+Recursive dependencies are fetched (at their master/tip/HEAD revision), unless they
+or their parent package are already present.
+
+If a subpackage of a dependency being fetched is already present, it will be deleted.
+
 The import path may include a url scheme. This may be useful when fetching dependencies
 from private repositories that cannot be probed.
 

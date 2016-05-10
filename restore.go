@@ -47,7 +47,7 @@ Flags:
 	Run: func(args []string) error {
 		switch len(args) {
 		case 0:
-			return restore(manifestFile())
+			return restore(manifestFile)
 		default:
 			return fmt.Errorf("restore takes no arguments")
 		}
@@ -69,7 +69,7 @@ func restore(manFile string) error {
 		go func() {
 			defer wg.Done()
 			for d := range depC {
-				if err := downloadDependency(d, &errors, vendorDir(), false); err != nil {
+				if err := downloadDependency(d, &errors, vendorDir, false); err != nil {
 					log.Printf("%s: %v", d.Importpath, err)
 					atomic.AddUint32(&errors, 1)
 				}

@@ -57,15 +57,13 @@ func ParseImports(root, vendorRoot, vendorPrefix string) (map[string]bool, error
 //
 // It returns the path to pkgName inside the vendor folder, relative to root.
 func findVendor(root, start, pkgName string) string {
-	if !strings.HasPrefix(root, start) {
-		log.Fatal("Assertion failed:", root, "prefix of", start)
+	if !strings.HasPrefix(start, root) {
+		log.Fatalln("Assertion failed:", root, "prefix of", start)
 	}
 
 	levels := strings.Split(strings.TrimPrefix(start, root), string(filepath.Separator))
-	log.Println(root, start, levels, pkgName)
 	for {
-		candidate := filepath.Join(append(append([]string{root}, levels...), pkgName)...)
-		log.Println(candidate)
+		candidate := filepath.Join(append(append([]string{root}, levels...), "vendor", pkgName)...)
 
 		files, err := ioutil.ReadDir(candidate)
 		if err != nil {

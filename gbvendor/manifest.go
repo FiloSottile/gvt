@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"reflect"
 	"sort"
@@ -24,19 +25,19 @@ type Manifest struct {
 }
 
 var (
-	depPresent       = errors.New("dependency already present")
-	depSubPkgPresent = errors.New("subpackages of this dependency are already present")
-	depMissing       = errors.New("dependency does not exist")
+	DepPresent       = errors.New("dependency already present")
+	DepSubPkgPresent = errors.New("subpackages of this dependency are already present")
+	DepMissing       = errors.New("dependency does not exist")
 )
 
 // AddDependency adds a Dependency to the current Manifest.
 // If the dependency exists already then it returns and error.
 func (m *Manifest) AddDependency(dep Dependency) error {
 	if m.HasImportpath(dep.Importpath) {
-		return depPresent
+		return DepPresent
 	}
 	if m.GetSubpackages(dep.Importpath) != nil {
-		return depSubPkgPresent
+		return DepSubPkgPresent
 	}
 	m.Dependencies = append(m.Dependencies, dep)
 	return nil
@@ -51,7 +52,7 @@ func (m *Manifest) RemoveDependency(dep Dependency) error {
 			return nil
 		}
 	}
-	return depMissing
+	return DepMissing
 }
 
 // HasImportpath reports whether the Manifest contains the import path,
@@ -66,7 +67,7 @@ func (m *Manifest) HasImportpath(path string) bool {
 // If the dependency does not exist it returns an error.
 func (m *Manifest) GetDependencyForImportpath(path string) (Dependency, error) {
 	for _, d := range m.Dependencies {
-		if strings.HasPrefix(path, d.Importpath) {
+		if path == d.Importpath || strings.HasPrefix(path, d.Importpath+"/") {
 			return d, nil
 		}
 	}
@@ -169,16 +170,18 @@ func ReadManifest(path string) (*Manifest, error) {
 
 	var m Manifest
 	d := json.NewDecoder(f)
-	err = d.Decode(&m)
+	if err := d.Decode(&m); err != nil {
+		return nil, err
+	}
 
 	// Pass all dependencies through AddDependency to detect overlap
 	deps := m.Dependencies
 	m.Dependencies = nil
 	sort.Sort(byImportpath(deps)) // so that subpackages come after parents
 	for _, d := range deps {
-		if err := m.AddDependency(d); err == depPresent {
-			fmt.Fprintln(os.Stderr, "WARNING: overlapping dependency detected:", d.Importpath)
-			fmt.Fprintln(os.Stderr, "The subpackage will be ignored to fix undefined behavior. See https://git.io/vwK4B")
+		if err := m.AddDependency(d); err == DepPresent {
+			log.Println("WARNING: overlapping dependency detected:", d.Importpath)
+			log.Println("The subpackage will be ignored to fix undefined behavior. See https://git.io/vwK4B")
 		} else if err != nil {
 			return nil, err
 		}

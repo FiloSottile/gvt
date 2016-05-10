@@ -36,7 +36,7 @@ Flags:
 			return fmt.Errorf("delete: you cannot specify path and --all flag at once")
 		}
 
-		m, err := vendor.ReadManifest(manifestFile())
+		m, err := vendor.ReadManifest(manifestFile)
 		if err != nil {
 			return fmt.Errorf("could not load manifest: %v", err)
 		}
@@ -65,12 +65,12 @@ Flags:
 				return fmt.Errorf("dependency could not be deleted: %v", err)
 			}
 
-			if err := fileutils.RemoveAll(filepath.Join(vendorDir(), filepath.FromSlash(path))); err != nil {
+			if err := fileutils.RemoveAll(filepath.Join(vendorDir, filepath.FromSlash(path))); err != nil {
 				// TODO(dfc) need to apply vendor.cleanpath here to remove indermediate directories.
 				return fmt.Errorf("dependency could not be deleted: %v", err)
 			}
 		}
-		return vendor.WriteManifest(manifestFile(), m)
+		return vendor.WriteManifest(manifestFile, m)
 	},
 	AddFlags: addDeleteFlags,
 }
