@@ -181,7 +181,7 @@ func ReadManifest(path string) (*Manifest, error) {
 	for _, d := range deps {
 		if err := m.AddDependency(d); err == DepPresent {
 			log.Println("WARNING: overlapping dependency detected:", d.Importpath)
-			log.Println("The subpackage will be ignored to fix undefined behavior. See https://git.io/vwK4B")
+			log.Println("The subpackage will be ignored to fix undefined behavior. See https://git.io/vr8Mu")
 		} else if err != nil {
 			return nil, err
 		}
