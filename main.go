@@ -93,7 +93,8 @@ func init() {
 	vendorDir = filepath.Join(wd, "vendor")
 	manifestFile = filepath.Join(vendorDir, "manifest")
 	srcTree := filepath.Join(build.Default.GOPATH, "src") + string(filepath.Separator)
-	if build.Default.GOPATH == "" || !strings.HasPrefix(wd, srcTree) {
+
+	if build.Default.GOPATH == "" || (!strings.HasPrefix(wd, srcTree) && wd != srcTree[:len(srcTree)-1]) {
 		log.Println("WARNING: for go vendoring to work your project needs to be somewhere under $GOPATH/src/")
 	} else {
 		importPath = filepath.ToSlash(strings.TrimPrefix(wd, srcTree))
