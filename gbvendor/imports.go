@@ -12,23 +12,29 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/FiloSottile/gvt/fileutils"
 )
 
 // ParseImports parses Go packages from a specific root returning a set of import paths.
 // vendorRoot is how deep to go looking for vendor folders, usually the repo root.
 // vendorPrefix is the vendorRoot import path.
-func ParseImports(root, vendorRoot, vendorPrefix string) (map[string]bool, error) {
+func ParseImports(root, vendorRoot, vendorPrefix string, tests, all bool) (map[string]bool, error) {
 	pkgs := make(map[string]bool)
 
 	var walkFn = func(p string, info os.FileInfo, err error) error {
-		if info.IsDir() {
-			name := info.Name()
-			if strings.HasPrefix(name, ".") || strings.HasPrefix(name, "_") || name == "testdata" {
+		if err != nil {
+			return err
+		}
+
+		if fileutils.ShouldSkip(p, info, tests, all) {
+			if info.IsDir() {
 				return filepath.SkipDir
 			}
 			return nil
 		}
-		if filepath.Ext(p) != ".go" { // Parse only go source files
+
+		if info.IsDir() || filepath.Ext(p) != ".go" {
 			return nil
 		}
 

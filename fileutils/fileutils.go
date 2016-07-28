@@ -26,6 +26,53 @@ var licenseFiles = []string{
 	"LICENSE", "LICENCE", "UNLICENSE", "COPYING", "COPYRIGHT",
 }
 
+func ShouldSkip(path string, info os.FileInfo, tests, all bool) bool {
+	name := filepath.Base(path)
+
+	relevantFile := false
+	for _, ext := range goFileTypes {
+		if strings.HasSuffix(name, ext) {
+			relevantFile = true
+			break
+		}
+	}
+
+	testdata := false
+	for _, n := range strings.Split(filepath.Dir(path), string(filepath.Separator)) {
+		if n == "testdata" || n == "_testdata" {
+			testdata = true
+		}
+	}
+
+	skip := false
+	switch {
+	case all && !(name == ".git" && info.IsDir()) && name != ".bzr" && name != ".hg":
+		skip = false
+
+	// Include all files in a testdata folder
+	case tests && testdata:
+		skip = false
+
+	// https://golang.org/cmd/go/#hdr-Description_of_package_lists
+	case strings.HasPrefix(name, "."):
+		skip = true
+	case strings.HasPrefix(name, "_") && name != "_testdata":
+		skip = true
+
+	case !tests && name == "_testdata" && info.IsDir():
+		skip = true
+	case !tests && name == "testdata" && info.IsDir():
+		skip = true
+	case !tests && strings.HasSuffix(name, "_test.go") && !info.IsDir():
+		skip = true
+
+	case !relevantFile && !info.IsDir():
+		skip = true
+	}
+
+	return skip
+}
+
 // Copypath copies the contents of src to dst, excluding any file that is not
 // relevant to the Go compiler.
 func Copypath(dst string, src string, tests, all bool) error {
@@ -34,48 +81,7 @@ func Copypath(dst string, src string, tests, all bool) error {
 			return err
 		}
 
-		name := filepath.Base(path)
-
-		relevantFile := false
-		for _, ext := range goFileTypes {
-			if strings.HasSuffix(name, ext) {
-				relevantFile = true
-				break
-			}
-		}
-
-		testdata := false
-		for _, n := range strings.Split(filepath.Dir(path), string(filepath.Separator)) {
-			if n == "testdata" || n == "_testdata" {
-				testdata = true
-			}
-		}
-
-		skip := false
-		switch {
-		case all && !(name == ".git" && info.IsDir()) && name != ".bzr" && name != ".hg":
-			skip = false
-
-		// Include all files in a testdata folder
-		case tests && testdata:
-			skip = false
-
-		// https://golang.org/cmd/go/#hdr-Description_of_package_lists
-		case strings.HasPrefix(name, "."):
-			skip = true
-		case strings.HasPrefix(name, "_") && name != "_testdata":
-			skip = true
-
-		case !tests && name == "_testdata" && info.IsDir():
-			skip = true
-		case !tests && name == "testdata" && info.IsDir():
-			skip = true
-		case !tests && strings.HasSuffix(name, "_test.go") && !info.IsDir():
-			skip = true
-
-		case !relevantFile && !info.IsDir():
-			skip = true
-		}
+		skip := ShouldSkip(path, info, tests, all)
 
 		if skip {
 			if info.IsDir() {

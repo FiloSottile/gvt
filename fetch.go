@@ -229,7 +229,7 @@ func fetchRecursive(m *vendor.Manifest, fullPath string, level int) error {
 			return fmt.Errorf("unable to derive the root repo import path")
 		}
 		rootRepoPath := strings.TrimRight(strings.TrimSuffix(dep.Importpath, dep.Path), "/")
-		deps, err := vendor.ParseImports(src, wc.Dir(), rootRepoPath)
+		deps, err := vendor.ParseImports(src, wc.Dir(), rootRepoPath, tests, all)
 		if err != nil {
 			return fmt.Errorf("failed to parse imports: %s", err)
 		}
