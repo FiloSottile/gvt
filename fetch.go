@@ -81,8 +81,9 @@ Flags:
 }
 
 var (
-	fetchRoot    string   // where the current session started
-	fetchedToday []string // packages fetched during this session
+	fetchRoot    string            // where the current session started
+	rootRepo     vendor.RemoteRepo // the repo of the requested package
+	fetchedToday []string          // packages fetched during this session
 )
 
 func fetch(path string) error {
@@ -92,6 +93,13 @@ func fetch(path string) error {
 	}
 
 	fetchRoot = stripscheme(path)
+
+	// Set repo for root of the fetch to keep tag/revision consistent
+	rootRepo, _, err = GlobalDownloader.DeduceRemoteRepo(fetchRoot, insecure)
+	if err != nil {
+		return fmt.Errorf("failed to load repo for: %s: %s", fetchRoot, err)
+	}
+
 	return fetchRecursive(m, path, 0)
 }
 
@@ -165,7 +173,7 @@ func fetchRecursive(m *vendor.Manifest, fullPath string, level int) error {
 	}
 
 	var wc vendor.WorkingCopy
-	if level == 0 || parentOfRoot {
+	if level == 0 || parentOfRoot || (repo.URL() == rootRepo.URL()) {
 		wc, err = GlobalDownloader.Get(repo, branch, tag, revision)
 	} else {
 		wc, err = GlobalDownloader.Get(repo, "", "", "")
