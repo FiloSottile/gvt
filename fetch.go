@@ -81,9 +81,9 @@ Flags:
 }
 
 var (
-	fetchRoot    string            // where the current session started
-	rootRepo     vendor.RemoteRepo // the repo of the requested package
-	fetchedToday []string          // packages fetched during this session
+	fetchRoot    string   // where the current session started
+	rootRepoURL  string   // the url of the repo from which the root comes from
+	fetchedToday []string // packages fetched during this session
 )
 
 func fetch(path string) error {
@@ -93,13 +93,6 @@ func fetch(path string) error {
 	}
 
 	fetchRoot = stripscheme(path)
-
-	// Set repo for root of the fetch to keep tag/revision consistent
-	rootRepo, _, err = GlobalDownloader.DeduceRemoteRepo(fetchRoot, insecure)
-	if err != nil {
-		return fmt.Errorf("failed to load repo for: %s: %s", fetchRoot, err)
-	}
-
 	return fetchRecursive(m, path, 0)
 }
 
@@ -141,12 +134,8 @@ func fetchRecursive(m *vendor.Manifest, fullPath string, level int) error {
 	}
 
 	// Finally, check if we already vendored a subpackage and remove it
-	parentOfRoot := false
 	for _, subp := range m.GetSubpackages(path) {
-		if contains(subp.Importpath, fetchRoot) {
-			// Through dependencies we ended up fetching a parent of the starting package
-			parentOfRoot = true // use the requested tag/branch/revision
-		} else {
+		if !contains(subp.Importpath, fetchRoot) { // ignore parents of the root
 			ignore := false
 			for _, d := range fetchedToday {
 				if contains(d, subp.Importpath) {
@@ -172,8 +161,12 @@ func fetchRecursive(m *vendor.Manifest, fullPath string, level int) error {
 		return err
 	}
 
+	if level == 0 {
+		rootRepoURL = repo.URL()
+	}
+
 	var wc vendor.WorkingCopy
-	if level == 0 || parentOfRoot || (repo.URL() == rootRepo.URL()) {
+	if repo.URL() == rootRepoURL {
 		wc, err = GlobalDownloader.Get(repo, branch, tag, revision)
 	} else {
 		wc, err = GlobalDownloader.Get(repo, "", "", "")
