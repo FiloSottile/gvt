@@ -138,7 +138,7 @@ Since in the current manifest, inherited from gb-vendor, a dependency includes
 all subpackages, it is possible to get conflicts in the form of overlapping dependencies.
 For example, if we had one version of example.com/a and a different one of example.com/a/b.
 
-To solve this cleanly, ovelaps are disallowed. Subpackages of existing dependencies are
+To solve this cleanly, overlaps are disallowed. Subpackages of existing dependencies are
 silently treated as existing dependencies. Parents of existing dependencies are treated
 as missing and cause the subpackages to be deleted when they are fetched.
 
