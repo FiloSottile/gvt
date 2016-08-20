@@ -273,7 +273,7 @@ func probe(vcs func(*url.URL) error, url *url.URL, insecure bool, schemes ...str
 		url.Scheme = scheme
 
 		switch url.Scheme {
-		case "https", "ssh":
+		case "git+ssh", "https", "ssh":
 			if err := vcs(&url); err == nil {
 				return url.String(), nil
 			}
