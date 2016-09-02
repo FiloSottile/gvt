@@ -46,6 +46,13 @@ func ParseImports(root, vendorRoot, vendorPrefix string, tests, all bool) (map[s
 
 		for _, s := range f.Imports {
 			pkg := strings.Replace(s.Path.Value, "\"", "", -1)
+			if strings.HasPrefix(pkg, "./") {
+				middle, err := filepath.Rel(vendorRoot, filepath.Dir(p))
+				if err != nil {
+					panic(err)
+				}
+				pkg = path.Join(vendorPrefix, middle, pkg)
+			}
 			if vp := findVendor(vendorRoot, filepath.Dir(p), pkg); vp != "" {
 				pkg = path.Join(vendorPrefix, vp)
 			}
