@@ -92,11 +92,21 @@ func init() {
 	}
 	vendorDir = filepath.Join(wd, "vendor")
 	manifestFile = filepath.Join(vendorDir, "manifest")
-	srcTree := filepath.Join(build.Default.GOPATH, "src") + string(filepath.Separator)
+	var srcTree []string
+	for _, p := range filepath.SplitList(build.Default.GOPATH) {
+		srcTree = append(srcTree, filepath.Join(p, "src")+string(filepath.Separator))
+	}
 
-	if build.Default.GOPATH == "" || (!strings.HasPrefix(wd, srcTree) && wd != srcTree[:len(srcTree)-1]) {
+	var pathMismatch int
+	for _, p := range srcTree {
+		if !strings.HasPrefix(wd, p) && wd != p[:len(p)-1] {
+			pathMismatch++
+			continue
+		}
+		importPath = filepath.ToSlash(strings.TrimPrefix(wd, p))
+		break
+	}
+	if build.Default.GOPATH == "" || len(srcTree) == pathMismatch {
 		log.Println("WARNING: for go vendoring to work your project needs to be somewhere under $GOPATH/src/")
-	} else {
-		importPath = filepath.ToSlash(strings.TrimPrefix(wd, srcTree))
 	}
 }
