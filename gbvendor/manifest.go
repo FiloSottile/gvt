@@ -78,7 +78,7 @@ func (m *Manifest) GetDependencyForImportpath(path string) (Dependency, error) {
 // of the given import path.
 func (m *Manifest) GetSubpackages(path string) (deps []Dependency) {
 	for _, d := range m.Dependencies {
-		if path != d.Importpath && strings.HasPrefix(d.Importpath, path) {
+		if path != d.Importpath && strings.HasPrefix(d.Importpath, path+"/") {
 			deps = append(deps, d)
 		}
 	}
