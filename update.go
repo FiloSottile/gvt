@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/FiloSottile/gvt/fileutils"
 	"github.com/FiloSottile/gvt/gbvendor"
@@ -16,6 +17,7 @@ var (
 func addUpdateFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&updateAll, "all", false, "update all dependencies")
 	fs.BoolVar(&insecure, "precaire", false, "allow the use of insecure protocols")
+	fs.BoolVar(&noRecurse, "no-recurse", false, "do not fetch recursively")
 }
 
 var cmdUpdate = &Command{
@@ -35,6 +37,8 @@ to replace it.
 Flags:
 	-all
 		update all dependencies in the manifest.
+  -no-recurse
+    skip checking for and fetching new transitive dependencies
 	-precaire
 		allow the use of insecure protocols.
 
@@ -123,6 +127,30 @@ Flags:
 
 			if err := vendor.WriteManifest(manifestFile, m); err != nil {
 				return err
+			}
+
+			if !noRecurse {
+				// Look for dependencies in src, not going past wc.Dir() when looking for /vendor/,
+				// knowing that wc.Dir() corresponds to rootRepoPath
+				if !strings.HasSuffix(dep.Importpath, dep.Path) {
+					return fmt.Errorf("unable to derive the root repo import path")
+				}
+				rootRepoPath := strings.TrimRight(strings.TrimSuffix(dep.Importpath, dep.Path), "/")
+				deps, err := vendor.ParseImports(src, wc.Dir(), rootRepoPath, !d.NoTests, d.AllFiles)
+				if err != nil {
+					return fmt.Errorf("failed to parse imports: %s", err)
+				}
+
+				for d := range deps {
+					if strings.Index(d, ".") == -1 { // TODO: replace this silly heuristic
+						continue
+					}
+					if !m.HasImportpath(d) {
+						if err := fetch(d); err != nil {
+							return err
+						}
+					}
+				}
 			}
 		}
 
