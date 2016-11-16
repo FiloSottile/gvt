@@ -21,6 +21,7 @@ var (
 	insecure  bool // Allow the use of insecure protocols
 	tests     bool
 	all       bool
+	makefiles bool
 )
 
 func addFetchFlags(fs *flag.FlagSet) {
@@ -31,6 +32,7 @@ func addFetchFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&insecure, "precaire", false, "allow the use of insecure protocols")
 	fs.BoolVar(&tests, "t", false, "fetch _test.go files and testdata")
 	fs.BoolVar(&all, "a", false, "fetch all files and subfolders")
+	fs.BoolVar(&makefiles, "m", true, "fetch all makefiles extentions -- enabled by default")
 }
 
 var cmdFetch = &Command{
@@ -50,6 +52,8 @@ from private repositories that cannot be probed.
 Flags:
 	-t
 		fetch also _test.go files and testdata.
+  -m
+    fetch also *.mak files (makefiles)
 	-a
 		fetch all files and subfolders, ignoring ONLY .git, .hg and .bzr.
 	-branch branch
@@ -196,6 +200,7 @@ func fetchRecursive(m *vendor.Manifest, fullPath string, level int) error {
 		Path:       extra,
 		NoTests:    !tests,
 		AllFiles:   all,
+		Makefiles:  makefiles,
 	}
 
 	if err := m.AddDependency(dep); err != nil {
@@ -207,7 +212,7 @@ func fetchRecursive(m *vendor.Manifest, fullPath string, level int) error {
 	dst := filepath.Join(vendorDir, dep.Importpath)
 	src := filepath.Join(wc.Dir(), dep.Path)
 
-	if err := fileutils.Copypath(dst, src, !dep.NoTests, dep.AllFiles); err != nil {
+	if err := fileutils.Copypath(dst, src, !dep.NoTests, dep.AllFiles, dep.Makefiles); err != nil {
 		return err
 	}
 
@@ -230,7 +235,7 @@ func fetchRecursive(m *vendor.Manifest, fullPath string, level int) error {
 			return fmt.Errorf("unable to derive the root repo import path")
 		}
 		rootRepoPath := strings.TrimRight(strings.TrimSuffix(dep.Importpath, dep.Path), "/")
-		deps, err := vendor.ParseImports(src, wc.Dir(), rootRepoPath, tests, all)
+		deps, err := vendor.ParseImports(src, wc.Dir(), rootRepoPath, tests, all, makefiles)
 		if err != nil {
 			return fmt.Errorf("failed to parse imports: %s", err)
 		}

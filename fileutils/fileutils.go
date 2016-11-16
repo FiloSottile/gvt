@@ -26,7 +26,7 @@ var licenseFiles = []string{
 	"LICENSE", "LICENCE", "UNLICENSE", "COPYING", "COPYRIGHT",
 }
 
-func ShouldSkip(path string, info os.FileInfo, tests, all bool) bool {
+func ShouldSkip(path string, info os.FileInfo, tests, all, makefiles bool) bool {
 	name := filepath.Base(path)
 
 	relevantFile := false
@@ -47,6 +47,10 @@ func ShouldSkip(path string, info os.FileInfo, tests, all bool) bool {
 	skip := false
 	switch {
 	case all && !(name == ".git" && info.IsDir()) && name != ".bzr" && name != ".hg":
+		skip = false
+
+	// Include all makefiles
+	case makefiles && strings.HasSuffix(name, ".mak"):
 		skip = false
 
 	// Include all files in a testdata folder
@@ -75,13 +79,13 @@ func ShouldSkip(path string, info os.FileInfo, tests, all bool) bool {
 
 // Copypath copies the contents of src to dst, excluding any file that is not
 // relevant to the Go compiler.
-func Copypath(dst string, src string, tests, all bool) error {
+func Copypath(dst string, src string, tests, all, makefiles bool) error {
 	err := filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		skip := ShouldSkip(path, info, tests, all)
+		skip := ShouldSkip(path, info, tests, all, makefiles)
 
 		if skip {
 			if info.IsDir() {

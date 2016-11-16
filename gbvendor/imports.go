@@ -19,7 +19,7 @@ import (
 // ParseImports parses Go packages from a specific root returning a set of import paths.
 // vendorRoot is how deep to go looking for vendor folders, usually the repo root.
 // vendorPrefix is the vendorRoot import path.
-func ParseImports(root, vendorRoot, vendorPrefix string, tests, all bool) (map[string]bool, error) {
+func ParseImports(root, vendorRoot, vendorPrefix string, tests, all, makefiles bool) (map[string]bool, error) {
 	pkgs := make(map[string]bool)
 
 	var walkFn = func(p string, info os.FileInfo, err error) error {
@@ -27,7 +27,7 @@ func ParseImports(root, vendorRoot, vendorPrefix string, tests, all bool) (map[s
 			return err
 		}
 
-		if fileutils.ShouldSkip(p, info, tests, all) {
+		if fileutils.ShouldSkip(p, info, tests, all, makefiles) {
 			if info.IsDir() {
 				return filepath.SkipDir
 			}
