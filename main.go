@@ -106,7 +106,9 @@ func init() {
 		importPath = filepath.ToSlash(strings.TrimPrefix(wd, p))
 		break
 	}
-	if build.Default.GOPATH == "" || len(srcTree) == pathMismatch {
-		log.Println("WARNING: for go vendoring to work your project needs to be somewhere under $GOPATH/src/")
+	if _, err := os.Stat(filepath.Join(wd, "Makefile")); os.IsNotExist(err) {
+		if build.Default.GOPATH == "" || len(srcTree) == pathMismatch {
+			log.Println("WARNING: for go vendoring to work your project needs to be somewhere under $GOPATH/src/")
+		}
 	}
 }
