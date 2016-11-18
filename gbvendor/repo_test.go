@@ -43,33 +43,28 @@ func TestDeduceRemoteRepo(t *testing.T) {
 		want: &gitrepo{
 			url: "https://github.com/coreos/go-etcd",
 		},
+		/*
+			bitbucket cannot maintain a stable ssh key across their app servers
+			and this mucks up ci testing because mercurial does not have any
+			way of unconditionally accepting new ssh keys for the host.
+			Great work TEAM.
+			}, {
+				path: "bitbucket.org/davecheney/gitrepo/cmd/main",
+				want: &gitrepo{
+					url: "https://bitbucket.org/davecheney/gitrepo",
+				},
+				extra: "/cmd/main",
+			}, {
+				path: "bitbucket.org/davecheney/hgrepo/cmd/main",
+				want: &hgrepo{
+					url: "https://bitbucket.org/davecheney/hgrepo",
+				},
+				extra: "/cmd/main",
+		*/
 	}, {
-		path: "bitbucket.org/davecheney/gitrepo/cmd/main",
+		path: "git.eclipse.org/gitroot/epf/org.eclipse.epf.docs.git",
 		want: &gitrepo{
-			url: "https://bitbucket.org/davecheney/gitrepo",
-		},
-		extra: "/cmd/main",
-	}, {
-		path: "bitbucket.org/davecheney/hgrepo/cmd/main",
-		want: &hgrepo{
-			url: "https://bitbucket.org/davecheney/hgrepo",
-		},
-		extra: "/cmd/main",
-	}, {
-		path: "code.google.com/p/goauth2/oauth",
-		want: &hgrepo{
-			url: "https://code.google.com/p/goauth2",
-		},
-		extra: "/oauth",
-	}, {
-		path: "code.google.com/p/gami",
-		want: &gitrepo{
-			url: "https://code.google.com/p/gami",
-		},
-	}, {
-		path: "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git",
-		want: &gitrepo{
-			url: "https://git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git",
+			url: "https://git.eclipse.org/gitroot/epf/org.eclipse.epf.docs.git",
 		},
 	}, {
 		path: "git.apache.org/thrift.git/lib/go/thrift",
@@ -117,39 +112,27 @@ func TestDeduceRemoteRepo(t *testing.T) {
 			url: "git://github.com/pkg/sftp",
 		},
 		insecure: true,
-	}, {
-		path: "code.google.com/p/google-api-go-client/bigquery/v2",
-		want: &hgrepo{
-			url: "https://code.google.com/p/google-api-go-client",
-		},
-		extra: "/bigquery/v2",
-	}, {
-		path: "code.google.com/p/go-sqlite/go1/sqlite3",
-		want: &hgrepo{
-			url: "https://code.google.com/p/go-sqlite",
-		},
-		extra: "/go1/sqlite3",
 	}}
 
 	for _, tt := range tests {
-		t.Logf("DeduceRemoteRepo(%q, %v)", tt.path, tt.insecure)
-		got, extra, err := DeduceRemoteRepo(tt.path, tt.insecure)
-		if !reflect.DeepEqual(err, tt.err) {
-			t.Errorf("DeduceRemoteRepo(%q): want err: %v, got err: %v", tt.path, tt.err, err)
-			continue
-		}
-		if !reflect.DeepEqual(got, tt.want) || extra != tt.extra {
-			t.Errorf("DeduceRemoteRepo(%q): want %#v, %v, got %#v, %v", tt.path, tt.want, tt.extra, got, extra)
-		}
+		t.Run(fmt.Sprintf("DeduceRemoteRepo(%q, %v)", tt.path, tt.insecure), func(t *testing.T) {
+			got, extra, err := DeduceRemoteRepo(tt.path, tt.insecure)
+			if !reflect.DeepEqual(err, tt.err) {
+				t.Fatalf("DeduceRemoteRepo(%q): want err: %v, got err: %v", tt.path, tt.err, err)
+			}
+			if !reflect.DeepEqual(got, tt.want) || extra != tt.extra {
+				t.Errorf("DeduceRemoteRepo(%q): want %#v, %v, got %#v, %v", tt.path, tt.want, tt.extra, got, extra)
+			}
 
-		if tt.want != nil {
-			got, err := NewRemoteRepo(tt.want.URL(), tt.want.Type(), tt.insecure)
-			if err != nil {
-				t.Fatal(err)
+			if tt.want != nil {
+				got, err := NewRemoteRepo(tt.want.URL(), tt.want.Type(), tt.insecure)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if !reflect.DeepEqual(got, tt.want) {
+					t.Errorf("NewRemoteRepo(%s, %s): want %#v, got %#v", tt.want.URL(), tt.want.Type(), tt.want, got)
+				}
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewRemoteRepo(%s, %s): want %#v, got %#v", tt.want.URL(), tt.want.Type(), tt.want, got)
-			}
-		}
+		})
 	}
 }

@@ -12,7 +12,8 @@ matrix:
 sudo: false
 
 script:
-  - make test
+  - if [[ "$TRAVIS_GO_VERSION" == "1.5.3" ]]; then make gvt; fi
+  - if [[ "$TRAVIS_GO_VERSION" != "1.5.3" ]]; then make test; fi
 
 os:
   - linux
