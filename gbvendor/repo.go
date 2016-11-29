@@ -365,6 +365,11 @@ func (g *gitrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 		}
 	}
 
+	if err := runOutPath(os.Stderr, dir, "git", "submodule", "update", "--init", "--quiet"); err != nil {
+		wc.Destroy()
+		return nil, err
+	}
+
 	return &GitClone{wc}, nil
 }
 
