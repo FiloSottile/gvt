@@ -99,6 +99,7 @@ Flags:
 				Path:       d.Path,
 				NoTests:    d.NoTests,
 				AllFiles:   d.AllFiles,
+				Makefiles:  d.Makefiles,
 			}
 
 			if err := fileutils.RemoveAll(filepath.Join(vendorDir, filepath.FromSlash(d.Importpath))); err != nil {
