@@ -23,7 +23,7 @@ var goFileTypes = []string{
 }
 
 var licenseFiles = []string{
-	"LICENSE", "LICENCE", "UNLICENSE", "COPYING", "COPYRIGHT",
+	"LICENSE", "LICENCE", "NOTICE", "UNLICENSE", "COPYING", "COPYRIGHT",
 }
 
 func ShouldSkip(path string, info os.FileInfo, tests, all bool) bool {
