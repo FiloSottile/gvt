@@ -72,7 +72,7 @@ Flags:
 
 			repo, err := vendor.NewRemoteRepo(d.Repository, d.VCS, insecure)
 			if err != nil {
-				return fmt.Errorf("could not determine repository for import %q", d.Importpath)
+				return fmt.Errorf("could not determine repository for import %q: %v", d.Importpath, err)
 			}
 
 			wc, err := GlobalDownloader.Get(repo, d.Branch, "", "")
