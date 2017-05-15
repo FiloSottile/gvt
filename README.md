@@ -128,7 +128,7 @@ vendor it at the original import path.
 
 Since this is not a common use-case, there's no support in `gvt fetch` for it,
 however, you can manually edit the `vendor/manifest` file, changing `repository`
-and `revision`, and then run `gvt restore`.
+and `revision`, and then run `gvt restore --filter=github.com/MyOrg/MyVendoredLib`.
 
 `gvt update` will stay on your fork.
 

@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -14,13 +15,15 @@ import (
 )
 
 var (
-	rbInsecure    bool // Allow the use of insecure protocols
-	rbConnections uint // Count of concurrent download connections
+	rbInsecure    bool   // Allow the use of insecure protocols
+	rbConnections uint   // Count of concurrent download connections
+	rbFilter      string // Only restore this package or subpackages
 )
 
 func addRestoreFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&rbInsecure, "precaire", false, "allow the use of insecure protocols")
 	fs.UintVar(&rbConnections, "connections", 8, "count of parallel download connections")
+	fs.StringVar(&rbFilter, "filter", "", "only restore this package or subpackages")
 }
 
 var cmdRestore = &Command{
@@ -78,7 +81,9 @@ func restore(manFile string) error {
 	}
 
 	for _, dep := range m.Dependencies {
-		depC <- dep
+		if rbFilter == "" || rbFilter == dep.Importpath || strings.HasPrefix(dep.Importpath, rbFilter+"/") {
+			depC <- dep
+		}
 	}
 	close(depC)
 	wg.Wait()
