@@ -12,21 +12,25 @@ import (
 
 var (
 	deleteAll bool // delete all dependencies
+	recurse   bool // remove dependencies recursively
 )
 
 func addDeleteFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&deleteAll, "all", false, "delete all dependencies")
+	fs.BoolVar(&recurse, "recurse", false, "remove dependencies recursively")
 }
 
 var cmdDelete = &Command{
 	Name:      "delete",
-	UsageLine: "delete [-all] importpath",
+	UsageLine: "delete [-all] [-recurse] importpath",
 	Short:     "delete a local dependency",
 	Long: `delete removes a dependency from the vendor directory and the manifest
 
 Flags:
 	-all
 		remove all dependencies
+	-recurse
+		remove dependencies recursively
 
 `,
 	Run: func(args []string) error {
@@ -41,12 +45,22 @@ Flags:
 			return fmt.Errorf("could not load manifest: %v", err)
 		}
 
+		p := args[0]
+		if p[len(p)-1] == '/' {
+			p = p[:len(p)-1]
+		}
+
 		var dependencies []vendor.Dependency
 		if deleteAll {
 			dependencies = make([]vendor.Dependency, len(m.Dependencies))
 			copy(dependencies, m.Dependencies)
+		} else if recurse {
+			deps := m.GetSubpackages(p)
+			if len(deps) == 0 {
+				return fmt.Errorf("no dependencies found recursively")
+			}
+			dependencies = append(dependencies, deps...)
 		} else {
-			p := args[0]
 			dependency, err := m.GetDependencyForImportpath(p)
 			if err != nil {
 				return fmt.Errorf("could not get dependency: %v", err)
