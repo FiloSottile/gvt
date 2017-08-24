@@ -310,7 +310,7 @@ func (g *gitrepo) Type() string {
 
 // Checkout fetchs the remote branch, tag, or revision. If the branch is blank,
 // then the default remote branch will be used. If the branch is "HEAD" and
-// revision is empty, an impossible update is assumed.
+// revision is empty, an impossible update is assumed. Sub modules are also checked out
 func (g *gitrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 	if branch == "HEAD" && revision == "" {
 		return nil, fmt.Errorf("cannot update %q as it has been previously fetched with -tag or -revision. Please use gvt delete then fetch again.", g.url)
@@ -332,7 +332,9 @@ func (g *gitrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 	quiet := false
 	args := []string{
 		"clone",
-		"-q", // silence progress report to stderr
+		"--recursive", // include submodules
+		"-j8",         // fetch up to 8 submodules in parallel (for performance)
+		"-q",          // silence progress report to stderr
 		g.url,
 		dir,
 	}
