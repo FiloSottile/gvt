@@ -15,7 +15,7 @@ func TestCopypathSymlinks(t *testing.T) {
 	dst := mktemp(t)
 	defer RemoveAll(dst)
 	src := filepath.Join("_testdata", "copyfile")
-	if err := Copypath(dst, src, true, false); err != nil {
+	if err := Copypath(dst, src, true, false, false); err != nil {
 		t.Fatalf("copypath(%s, %s): %v", dst, src, err)
 	}
 	res, err := os.Readlink(filepath.Join(dst, "a", "rick"))
