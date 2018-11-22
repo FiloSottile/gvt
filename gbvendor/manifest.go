@@ -117,6 +117,9 @@ type Dependency struct {
 
 	// AllFiles indicates that no files were ignored.
 	AllFiles bool `json:"allfiles,omitempty"`
+
+	// AllVCS indicates that no files were ignored, including .git, .hg and .bzr VCS directories.
+	AllVCS bool `json:"allvcs,omitempty"`
 }
 
 // WriteManifest writes a Manifest to the path. If the manifest does

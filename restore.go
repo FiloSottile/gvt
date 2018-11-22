@@ -98,6 +98,9 @@ func downloadDependency(dep vendor.Dependency, errors *uint32, vendorDir string,
 	if dep.AllFiles {
 		extraMsg = "(without file exclusions)"
 	}
+	if dep.AllVCS {
+		extraMsg = "(including all files and VCS directories)"
+	}
 	if recursive {
 		log.Printf("fetching recursive %s %s", dep.Importpath, extraMsg)
 	} else {
@@ -123,7 +126,7 @@ func downloadDependency(dep vendor.Dependency, errors *uint32, vendorDir string,
 		}
 	}
 
-	if err := fileutils.Copypath(dst, src, !dep.NoTests, dep.AllFiles); err != nil {
+	if err := fileutils.Copypath(dst, src, !dep.NoTests, dep.AllFiles, dep.AllVCS); err != nil {
 		return err
 	}
 

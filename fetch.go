@@ -20,7 +20,8 @@ var (
 	noRecurse bool
 	insecure  bool // Allow the use of insecure protocols
 	tests     bool
-	all       bool
+	all       bool // Fetch all but .git, .hg and .bzr
+	all_vcs   bool // Fetch all including .git, .hg and .bzr
 )
 
 func addFetchFlags(fs *flag.FlagSet) {
@@ -31,11 +32,13 @@ func addFetchFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&insecure, "precaire", false, "allow the use of insecure protocols")
 	fs.BoolVar(&tests, "t", false, "fetch _test.go files and testdata")
 	fs.BoolVar(&all, "a", false, "fetch all files and subfolders")
+	fs.BoolVar(&all_vcs, "A", false,
+		"fetch all files and subfolders including .git, .hg and .bzr")
 }
 
 var cmdFetch = &Command{
 	Name:      "fetch",
-	UsageLine: "fetch [-branch branch] [-revision rev | -tag tag] [-precaire] [-no-recurse] [-t|-a] importpath",
+	UsageLine: "fetch [-branch branch] [-revision rev | -tag tag] [-precaire] [-no-recurse] [-t|-a|-A] importpath",
 	Short:     "fetch a remote dependency",
 	Long: `fetch vendors an upstream import path.
 
@@ -52,6 +55,8 @@ Flags:
 		fetch also _test.go files and testdata.
 	-a
 		fetch all files and subfolders, ignoring ONLY .git, .hg and .bzr.
+	-A
+		fetch all files and subfolders, including .git, .hg and .bzr.
 	-branch branch
 		fetch from the named branch. Will also be used by gvt update.
 		If not supplied the default upstream branch will be used.
@@ -196,6 +201,7 @@ func fetchRecursive(m *vendor.Manifest, fullPath string, level int) error {
 		Path:       extra,
 		NoTests:    !tests,
 		AllFiles:   all,
+		AllVCS:     all_vcs,
 	}
 
 	if err := m.AddDependency(dep); err != nil {
@@ -207,7 +213,7 @@ func fetchRecursive(m *vendor.Manifest, fullPath string, level int) error {
 	dst := filepath.Join(vendorDir, dep.Importpath)
 	src := filepath.Join(wc.Dir(), dep.Path)
 
-	if err := fileutils.Copypath(dst, src, !dep.NoTests, dep.AllFiles); err != nil {
+	if err := fileutils.Copypath(dst, src, !dep.NoTests, dep.AllFiles, dep.AllVCS); err != nil {
 		return err
 	}
 
@@ -230,7 +236,7 @@ func fetchRecursive(m *vendor.Manifest, fullPath string, level int) error {
 			return fmt.Errorf("unable to derive the root repo import path")
 		}
 		rootRepoPath := strings.TrimRight(strings.TrimSuffix(dep.Importpath, dep.Path), "/")
-		deps, err := vendor.ParseImports(src, wc.Dir(), rootRepoPath, tests, all)
+		deps, err := vendor.ParseImports(src, wc.Dir(), rootRepoPath, tests, all, all_vcs)
 		if err != nil {
 			return fmt.Errorf("failed to parse imports: %s", err)
 		}
