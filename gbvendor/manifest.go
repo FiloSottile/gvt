@@ -117,6 +117,9 @@ type Dependency struct {
 
 	// AllFiles indicates that no files were ignored.
 	AllFiles bool `json:"allfiles,omitempty"`
+
+	// Makefiles indicates that makefiles would be included.
+	Makefiles bool `json:"makefiles,omitempty"`
 }
 
 // WriteManifest writes a Manifest to the path. If the manifest does
