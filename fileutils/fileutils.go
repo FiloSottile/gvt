@@ -53,11 +53,12 @@ func ShouldSkip(path string, info os.FileInfo, tests, all bool) bool {
 	case tests && testdata:
 		skip = false
 
+	// https://github.com/FiloSottile/gvt/issues/85
 	// https://golang.org/cmd/go/#hdr-Description_of_package_lists
-	case strings.HasPrefix(name, "."):
-		skip = true
-	case strings.HasPrefix(name, "_") && name != "_testdata":
-		skip = true
+	// case strings.HasPrefix(name, "."):
+	// 	skip = true
+	// case strings.HasPrefix(name, "_") && name != "_testdata":
+	// 	skip = true
 
 	case !tests && name == "_testdata" && info.IsDir():
 		skip = true
